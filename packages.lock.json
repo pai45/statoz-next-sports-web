@@ -21,8 +21,8 @@
       "name": "@statoz/release-core",
       "version": "0.1.0",
       "file": "vendor/statoz-release-core-0.1.0.tgz",
-      "sha256": "3a22fe8afdc1ee09e953d294a956ced52a78db00b72f5f7dc58dbe3cb6a58cca",
-      "integrity": "sha512-0NKX5od1otx76aW7ioE3Ssr2ZTBc2VWVpkg3HxwzJ8HPQH0da/DboWVyrtFwyBwEaKVRjs7OpgGuJ/r/7g5XRQ==",
+      "sha256": "d11b01a374dd1871ecd24ce0733306dbbb486ceb327aa124686a58afff9b2498",
+      "integrity": "sha512-gI0q63oXGqp6YpoJfQHs/BxshsmPU1Q6qp60OW1A6x4y+fKl/BSxrkrHwAcmr+zDiiq2DNZ6ut1w8TdxCGAXrw==",
       "publication": "bootstrap-unpublished"
     }
   ]

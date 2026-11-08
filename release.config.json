@@ -8,5 +8,5 @@
   "artifactDirectory": "out",
   "publicUrl": "https://pai45.github.io/statoz-next-sports-web/",
   "sourceOnlyWorkflow": "source.yml",
-  "publicationEnabled": false
+  "publicationEnabled": true
 }
