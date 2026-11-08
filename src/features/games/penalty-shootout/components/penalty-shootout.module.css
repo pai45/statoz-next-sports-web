@@ -1,0 +1,149 @@
+/*
+ * Motion and pseudo-state only.
+ *
+ * Everything the shootout animates per-frame — the ball, the keeper, the net —
+ * runs off a rAF timeline in TypeScript, because those are geometry rather than
+ * style. What is left here is the chrome around it: things that enter, pulse,
+ * or light up on hover, which the cascade does better than a controller. The
+ * global reduced-motion damper in globals.css already stills all of it.
+ */
+
+/* The tappable thirds of the goal. Invisible until aimed at. */
+.zone {
+  background: transparent;
+  transition: background-color 160ms ease-out;
+}
+
+.zone:hover,
+.zone:focus-visible {
+  background: color-mix(in srgb, var(--ds-color-accent-cyan) 8%, transparent);
+  outline: none;
+}
+
+.zone:focus-visible {
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--ds-color-accent-cyan) 60%, transparent);
+}
+
+/* Phases arrive by rising a little and fading in. */
+.enter {
+  animation: phase-enter var(--phase-ms, 300ms) cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+@keyframes phase-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Squad rows and stat cells deal in, staggered by an inline delay. */
+.deal {
+  animation: deal-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--deal-delay, 0ms);
+}
+
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--deal-from, -24px), var(--deal-lift, 0px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
+/*
+ * The lobby's hero CTA breathes while it waits. The plate is clipped, so the
+ * halo has to be a drop-shadow filter — a box-shadow would be cut off with the
+ * corners it is meant to spill past.
+ */
+.ctaGlow {
+  animation: cta-pulse 1800ms ease-in-out infinite alternate;
+}
+
+@keyframes cta-pulse {
+  from {
+    filter: drop-shadow(
+      0 0 10px color-mix(in srgb, var(--cta-accent) 24%, transparent)
+    );
+  }
+  to {
+    filter: drop-shadow(
+      0 0 26px color-mix(in srgb, var(--cta-accent) 46%, transparent)
+    );
+  }
+}
+
+/* The queue scanner, while a rival is being found. */
+.scan {
+  animation: scan-sweep 1200ms ease-in-out infinite;
+}
+
+@keyframes scan-sweep {
+  0%,
+  100% {
+    transform: translateX(-40%);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateX(40%);
+    opacity: 1;
+  }
+}
+
+/* The VS mark breathing between the two squads. */
+.pulse {
+  animation: vs-pulse 1600ms ease-in-out infinite;
+}
+
+@keyframes vs-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* The rival's name landing once the queue returns one. */
+.stamp {
+  animation: name-stamp 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes name-stamp {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The summary's pieces arriving in sequence, each with its own delay. */
+.rise {
+  animation: rise-in 420ms ease-out both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

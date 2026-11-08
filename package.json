@@ -1,0 +1,46 @@
+{
+  "name": "statoz-sports-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/statoz.mjs dev",
+    "start": "node scripts/statoz.mjs start",
+    "doctor": "node scripts/statoz.mjs doctor",
+    "setup": "npm ci --ignore-scripts --no-audit --no-fund",
+    "check": "node scripts/statoz.mjs check",
+    "build": "node scripts/statoz.mjs build",
+    "test": "node --test tests/operations/*.test.mjs",
+    "data:export": "node scripts/statoz.mjs transfer export",
+    "data:import": "node scripts/statoz.mjs transfer import",
+    "data:backup": "node scripts/statoz.mjs transfer backup",
+    "data:restore": "node scripts/statoz.mjs transfer restore",
+    "release:doctor": "node scripts/statoz.mjs release doctor",
+    "release:prepare": "node scripts/statoz.mjs release prepare",
+    "release:status": "node scripts/statoz.mjs release status",
+    "release:resume": "node scripts/statoz.mjs release resume",
+    "release": "node scripts/statoz.mjs release publish"
+  },
+  "dependencies": {
+    "@statoz/contracts": "file:vendor/statoz-contracts-0.1.0.tgz",
+    "@statoz/design-system": "file:vendor/statoz-design-system-0.1.0.tgz",
+    "@statoz/release-core": "file:vendor/statoz-release-core-0.1.0.tgz",
+    "lottie-react": "^3.1.1",
+    "next": "16.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.2",
+    "tailwindcss": "^4",
+    "tsx": "^4",
+    "typescript": "^5"
+  },
+  "type": "module"
+}

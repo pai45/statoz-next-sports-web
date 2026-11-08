@@ -1,0 +1,29 @@
+.shell {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 4px, color-mix(in srgb, var(--ds-color-accent-cyan) 4%, transparent) 5px),
+    radial-gradient(circle at 50% -12%, color-mix(in srgb, var(--shop-accent) 17%, transparent), transparent 52%);
+}
+
+.shell::before {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.28;
+  background: conic-gradient(from 0deg at 50% 28%, transparent, color-mix(in srgb, var(--shop-accent) 8%, transparent), transparent 28%);
+  animation: shop-radar 18s linear infinite;
+}
+
+.enter {
+  animation: shop-enter 420ms both cubic-bezier(.2,.8,.2,1);
+  animation-delay: calc(var(--item-index, 0) * 22ms);
+}
+
+.chamfer {
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+
+.dialogBackdrop {
+  background: color-mix(in srgb, var(--ds-color-background-primary) 86%, transparent);
+  backdrop-filter: blur(8px);
+}

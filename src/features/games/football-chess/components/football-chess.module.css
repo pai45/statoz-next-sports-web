@@ -1,0 +1,548 @@
+/**
+ * The board's geometry, and the motion around it.
+ *
+ * Flutter paints all of this into a canvas. Here the grid, the cell markings and
+ * the goals are ordinary layout, which is why they live in a stylesheet rather
+ * than a renderer: three columns by four rows, an aspect-ratio box, and pieces
+ * that slide on a transition instead of a `MoveEffect`.
+ *
+ * The global `prefers-reduced-motion` damper in `globals.css` stills everything
+ * below.
+ */
+
+/* ---- The pitch ------------------------------------------------------------ */
+
+.actionBar,
+.timerSlot,
+.pitch {
+  /*
+   * The score bar, the pick timer and the action bar, plus their padding — the
+   * height the board must leave for everything else on the screen.
+   *
+   * This has to account for the action deck at its *tallest*, not its shortest.
+   * Under-reserving it let the page grow past the viewport the moment a piece
+   * was selected, which popped a scrollbar and shifted every centred element
+   * sideways. The deck and the countdown below are fixed slots so this number
+   * stays true for the whole match.
+   */
+  --chess-chrome: 203px;
+
+  /* The action deck, sized to its tallest state: a row of verb chips. */
+  --chess-action-bar: 85px;
+  /* The pick countdown, held open even when it is not the player's turn. */
+  --chess-timer-slot: 11px;
+
+  /*
+   * The turf. Scene art rather than palette — the painted pitch, the way a
+   * team's colours are data — so it is named here and nowhere else. Ported from
+   * the gradient Flutter's `GridComponent` paints behind the board.
+   */
+  --chess-turf-far: #073222;
+  --chess-turf-mid: #061b22;
+  --chess-turf-near: #08111d;
+}
+
+.pitch {
+  display: flex;
+  /*
+   * Four playing rows plus a keeper row at each end, as Flutter's field rect
+   * reserves — hence 3:6.
+   *
+   * The width is chosen so the derived height always leaves the HUD and the
+   * action bar their room: a percentage height would have to resolve against a
+   * flex parent whose own height is still being decided, and it silently
+   * collapses when it cannot. Subtracting the chrome from the viewport is one
+   * calculation the browser can always answer.
+   */
+  width: min(100%, calc((100dvh - var(--chess-chrome)) / 2), 360px);
+  flex-direction: column;
+  margin-inline: auto;
+  aspect-ratio: 3 / 6;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ds-color-accent-cyan) 22%, transparent);
+  border-radius: 6px;
+  background: linear-gradient(
+    to bottom,
+    var(--chess-turf-far) 0%,
+    var(--chess-turf-mid) 50%,
+    var(--chess-turf-near) 100%
+  );
+}
+
+.goalRow {
+  position: relative;
+  display: grid;
+  flex: 1 1 0;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+}
+
+.goal {
+  position: absolute;
+  left: 50%;
+  display: block;
+  width: 30%;
+  height: 6px;
+  translate: -50%;
+}
+
+/*
+ * Each goal line sits on the *inner* edge of its keeper strip, against the
+ * playing grid — Flutter draws the opponent's at `field.top - goalH` and the
+ * player's at `field.bottom`. The keeper stands behind its own line. Named for
+ * which end it is rather than which screen edge, because the wide layout below
+ * moves both of them.
+ */
+.goalFar {
+  bottom: 0;
+}
+
+.goalNear {
+  top: 0;
+}
+
+/* The keeper's cell, drawn like a square but off the playing grid. */
+.keeperCell {
+  display: grid;
+  margin: 1.5px;
+  grid-column: 2;
+  border: 1px solid color-mix(in srgb, var(--ds-color-accent-cyan) 10%, transparent);
+  place-items: center;
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  flex: 4 1 0;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.halfway,
+.centreCircle {
+  position: absolute;
+  pointer-events: none;
+  border-color: color-mix(in srgb, var(--ds-color-accent-cyan) 22%, transparent);
+}
+
+.halfway {
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1.5px solid
+    color-mix(in srgb, var(--ds-color-accent-cyan) 22%, transparent);
+}
+
+.centreCircle {
+  top: 50%;
+  left: 50%;
+  width: 28%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 1.5px solid
+    color-mix(in srgb, var(--ds-color-accent-cyan) 22%, transparent);
+  border-radius: 50%;
+}
+
+/* ---- A square ------------------------------------------------------------- */
+
+.square {
+  position: relative;
+  display: grid;
+  grid-column: var(--sq-col);
+  grid-row: var(--sq-row);
+  margin: 1.5px;
+  border: 1px solid color-mix(in srgb, var(--ds-color-accent-cyan) 10%, transparent);
+  background: transparent;
+  place-items: center;
+}
+
+.squareLive {
+  cursor: pointer;
+}
+
+.square:focus-visible {
+  z-index: 3;
+  outline: 2px solid var(--ds-color-accent-cyan);
+  outline-offset: -2px;
+}
+
+/* Chess.com-style tint on the cells the last action touched. */
+.lastTouched {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--ds-color-accent-gold) 16%, transparent);
+}
+
+.selectedPlate {
+  position: absolute;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ds-color-accent-cyan) 20%, transparent);
+}
+
+.moveDot {
+  position: absolute;
+  width: 17%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ds-color-accent-cyan) 70%, transparent);
+}
+
+.dangerRing,
+.passRing {
+  position: absolute;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.dangerRing {
+  border: 2.5px solid var(--ds-color-danger);
+}
+
+.passRing {
+  border: 2px solid color-mix(in srgb, var(--ds-color-accent-cyan) 85%, transparent);
+}
+
+/* ---- A piece -------------------------------------------------------------- */
+
+.token {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  /* The chip is the piece; the plate and rings sit behind it. */
+  z-index: 2;
+  pointer-events: none;
+}
+
+.chip {
+  position: relative;
+  display: grid;
+  width: clamp(26px, 8.5vw, 44px);
+  aspect-ratio: 1;
+  border-style: solid;
+  border-radius: 50%;
+  place-items: center;
+  transition: border-color 160ms ease-out;
+}
+
+.chipActive {
+  filter: drop-shadow(0 0 10px currentcolor);
+}
+
+.rating {
+  font-family: var(--ds-font-display), sans-serif;
+  font-size: clamp(var(--ds-size-p11), 3.4vw, var(--ds-size-p16));
+  font-weight:var(--ds-weight-bold);
+  line-height: 1;
+}
+
+/* The booking chip, on the shoulder of the piece. */
+.booking {
+  position: absolute;
+  top: 6%;
+  right: -14%;
+  width: 22%;
+  height: 34%;
+  border-radius: 1px;
+}
+
+.name {
+  max-width: 100%;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--ds-color-text-default) 82%, transparent);
+  font-family: var(--ds-font-display), sans-serif;
+  font-size: clamp(var(--ds-size-p7), 2.1vw, var(--ds-size-p11));
+  font-weight:var(--ds-weight-semibold);
+  letter-spacing: 0.5px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The ball ------------------------------------------------------------- */
+
+.ball {
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: 16%;
+  aspect-ratio: 1;
+  z-index: 3;
+  border: 2px solid var(--ds-color-accent-gold);
+  border-radius: 50%;
+  background: var(--ds-color-text-default);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ds-color-accent-gold) 50%, transparent);
+}
+
+/* ---- The last-move arrow --------------------------------------------------- */
+
+.arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.arrowWide {
+  display: none;
+}
+
+.arrowBadge {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  place-items: center;
+}
+
+/* ---- Chrome --------------------------------------------------------------- */
+
+/*
+ * A fixed height, not a minimum: the deck swaps a one-line prompt for a row of
+ * verb chips, and letting that swap change the page's height moved the board.
+ * Content taller than the slot overflows it rather than growing it.
+ */
+.actionBar {
+  height: var(--chess-action-bar);
+}
+
+/* The countdown's reserved row — see `DecisionTimer`. */
+.timerSlot {
+  height: var(--chess-timer-slot);
+}
+
+.actionChip {
+  transition:
+    border-color 120ms ease-out,
+    background-color 120ms ease-out;
+}
+
+.actionChip:focus-visible {
+  outline: 2px solid var(--ds-color-accent-cyan);
+  outline-offset: 2px;
+}
+
+.enter {
+  animation: enter 220ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* The centre flash: up fast, then a long fade, as Flutter's controller does. */
+.flash {
+  animation: flash 1000ms linear both;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.toast {
+  animation: toast 2200ms linear both;
+}
+
+@keyframes toast {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* A goal washes the whole board gold, then clears. */
+.goalFlash {
+  animation: goal-flash 590ms linear both;
+}
+
+@keyframes goal-flash {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.lobbyIn {
+  animation: enter 480ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+  animation-delay: var(--lobby-delay, 0ms);
+}
+
+.tile {
+  transition:
+    background-color 160ms ease-out,
+    border-color 160ms ease-out;
+}
+
+.tile:hover {
+  border-color: color-mix(in srgb, var(--ds-color-accent-gold) 70%, transparent);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--ds-color-accent-gold);
+  outline-offset: 2px;
+}
+
+.statusDot {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ds-color-accent-gold) 80%, transparent);
+}
+
+/* ---- Desktop --------------------------------------------------------------- */
+
+/*
+ * A phone keeps the board portrait, as the app draws it: the player's goal
+ * nearest the reader, attacking away.
+ */
+@media (width >= 48rem) {
+  .pitch {
+    width: min(100%, calc((100dvh - var(--chess-chrome)) / 2), 400px);
+  }
+}
+
+/*
+ * A wide screen turns the pitch a quarter clockwise. The room on a desktop is
+ * horizontal, and a portrait board there is a tall strip in a sea of nothing —
+ * so the player's goal moves to the left and they attack rightwards, the way a
+ * televised pitch is framed.
+ *
+ * Nothing about the game changes. The engine still speaks in columns and rows,
+ * every square keeps its own coordinates and its spoken label, and all that is
+ * swapped is which grid line a cell lands on.
+ */
+@media (width >= 64rem) {
+  .pitch {
+    /* Four playing columns plus a keeper column at each end, over three rows. */
+    width: min(100%, calc((100dvh - var(--chess-chrome)) * 2), 1040px);
+    /* Depth follows the rotation: the opponent's end stays the lit one, which
+       is now the right rather than the top. */
+    background: linear-gradient(
+      to left,
+      var(--chess-turf-far) 0%,
+      var(--chess-turf-mid) 50%,
+      var(--chess-turf-near) 100%
+    );
+    /* `reverse` puts the player's end first, so they attack toward the
+       opponent's goal on the right. */
+    flex-direction: row-reverse;
+    aspect-ratio: 6 / 3;
+  }
+
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+  }
+
+  .square {
+    grid-column: var(--sq-wide-col);
+    grid-row: var(--sq-wide-row);
+  }
+
+  /* The keeper strip is a column now: three rows, keeper in the middle. */
+  .goalRow {
+    grid-template-columns: none;
+    grid-template-rows: repeat(3, 1fr);
+    justify-items: center;
+  }
+
+  .keeperCell {
+    width: 100%;
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  /* The goal line stands upright on the inner edge of its strip. */
+  .goal {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 6px;
+    height: 30%;
+    translate: 0 -50%;
+  }
+
+  .goalFar {
+    left: 0;
+  }
+
+  .goalNear {
+    right: 0;
+  }
+
+  /* Halfway runs down the pitch rather than across it. */
+  .halfway {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 50%;
+    border-top: none;
+    border-left: 1.5px solid
+      color-mix(in srgb, var(--ds-color-accent-cyan) 22%, transparent);
+  }
+
+  .centreCircle {
+    /* Sized off the shorter side, so it still reads as a circle. */
+    width: auto;
+    height: 38%;
+  }
+
+  .arrowTall {
+    display: none;
+  }
+
+  .arrowWide {
+    display: block;
+  }
+}
+
+
+/* ---- The coin -------------------------------------------------------------- */
+
+.coin {
+  display: grid;
+  width: 88px;
+  aspect-ratio: 1;
+  border: 3px solid;
+  border-radius: 50%;
+  place-items: center;
+}
+
+.coinSpin {
+  animation: coin-spin 1500ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+
+@keyframes coin-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(1800deg);
+  }
+}

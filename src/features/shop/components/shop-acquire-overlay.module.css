@@ -1,0 +1,211 @@
+.root {
+  --acquire-accent: var(--ds-color-accent-cyan);
+  --acquire-shake: 0px;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: rgb(0 0 0 / 84%);
+  animation: vignette-in 280ms linear both;
+}
+
+.dismissTarget {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+
+.dismissTarget:focus-visible {
+  outline: 2px solid var(--acquire-accent);
+  outline-offset: -4px;
+}
+
+.particles {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 320px;
+  height: 320px;
+  color: var(--acquire-accent);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.centerColumn {
+  display: flex;
+  max-width: calc(100vw - 32px);
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(var(--acquire-shake));
+  pointer-events: none;
+}
+
+.acquiredLabel {
+  margin: 0 0 22px;
+  color: var(--acquire-accent);
+  font-family: var(--ds-font-display);
+  font-size:var(--ds-size-p13);
+  font-weight:var(--ds-weight-black);
+  letter-spacing: 4.2px;
+  line-height: 1;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--acquire-accent) 65%, transparent);
+  animation: acquired-in 560ms linear 130ms both;
+}
+
+.previewMotion {
+  animation: item-slam 560ms cubic-bezier(.175, .885, .32, 1.275) 130ms both;
+}
+
+.previewGlow {
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--acquire-accent) 50%, transparent));
+}
+
+.bannerOpacity {
+  margin-top: 24px;
+  text-align: center;
+  animation: banner-opacity 420ms cubic-bezier(0, 0, .58, 1) 300ms both;
+}
+
+.bannerSlide {
+  animation: banner-slide 420ms cubic-bezier(.215, .61, .355, 1) 300ms both;
+}
+
+.itemName {
+  display: -webkit-box;
+  width: min(300px, calc(100vw - 32px));
+  margin: 0;
+  overflow: hidden;
+  color: var(--ds-color-text-primary);
+  font-family: var(--ds-font-display);
+  font-size:var(--ds-size-p26);
+  font-weight:var(--ds-weight-black);
+  letter-spacing: 1.4px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--acquire-accent) 55%, transparent);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.spendRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--ds-color-text-muted);
+  font-family: var(--ds-font-display);
+  font-size:var(--ds-size-p18);
+  font-variant-numeric: tabular-nums;
+  font-weight:var(--ds-weight-black);
+  line-height: 1;
+}
+
+.continueLabel {
+  position: absolute;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  color: var(--ds-color-text-muted);
+  font-family: var(--ds-font-display);
+  font-size:var(--ds-size-p11);
+  font-weight:var(--ds-weight-black);
+  letter-spacing: 2px;
+  line-height: 1;
+  text-align: center;
+  pointer-events: none;
+  animation: continue-in 210ms linear 510ms both;
+}
+
+.coinTopUp {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  color: var(--ds-color-accent-cyan);
+  font-family: var(--ds-font-display);
+  font-size:var(--ds-size-p34);
+  font-variant-numeric: tabular-nums;
+  font-weight:var(--ds-weight-black);
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--ds-color-accent-cyan) 55%, transparent);
+  pointer-events: none;
+  animation: coin-top-up 800ms linear both;
+}
+
+@keyframes vignette-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes acquired-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes item-slam {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@keyframes banner-opacity {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes banner-slide {
+  from { transform: translateY(12%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes continue-in {
+  from { opacity: 0; }
+  to { opacity: .5; }
+}
+
+@keyframes coin-top-up {
+  0% {
+    opacity: 1;
+    transform: scale(.5);
+    animation-timing-function: cubic-bezier(.175, .885, .32, 1.275);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+    animation-timing-function: linear;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vignette,
+  .acquiredLabel,
+  .previewMotion,
+  .bannerOpacity,
+  .bannerSlide,
+  .continueLabel,
+  .coinTopUp {
+    animation: none;
+  }
+
+  .continueLabel { opacity: .5; }
+}
