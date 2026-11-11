@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 
 import { SportIcon } from "@/features/matches";
 import type { ShopBanner } from "@/mocks/shop";
+import { publicAsset } from "@/shared/config";
 
 import styles from "./banner-art.module.css";
 
@@ -24,7 +25,7 @@ export function BannerArt({ banner }: { banner: ShopBanner }) {
       style={{ background: `linear-gradient(90deg, ${banner.colors[0]}, ${banner.colors[1]})` }}
     >
       {banner.assetSrc ? (
-        <Image src={banner.assetSrc} alt="" fill sizes="560px" className="object-cover object-center" />
+        <Image src={publicAsset(banner.assetSrc)} alt="" fill sizes="560px" className="object-cover object-center" />
       ) : (
         <>
           <span className={styles.bannerDust} aria-hidden="true" />

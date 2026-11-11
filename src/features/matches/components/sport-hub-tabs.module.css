@@ -1,0 +1,6 @@
+.bar { width: 100%; min-width: 0; border-block: 1px solid var(--ds-color-border-subtle); background: color-mix(in srgb, var(--ds-color-background-primary) 92%, transparent); }
+.inner { display: flex; align-items: center; gap: var(--ds-space-8); width: 100%; max-width: 80rem; margin-inline: auto; padding: var(--ds-space-8) var(--ds-dashboard-gutter); }
+.chips { flex: 1; min-width: 0; }
+.tools { display: flex; flex: none; gap: var(--ds-space-4); }
+.tools button { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: var(--ds-color-text-muted); cursor: pointer; }
+.tools button:hover { color: var(--ds-color-accent-cyan); background: var(--ds-color-background-elevated); }

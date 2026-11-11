@@ -6,7 +6,55 @@ import type { Sport } from "@/domain/sports";
  * format — five quizzes, four mystery games — so the id names the sport's
  * version rather than the format alone.
  */
-export type GameId = StatozGameId | "retro-circuit" | "retro-football" | "retro-hoops" | "retro-innings";
+export type GameId =
+  | StatozGameId
+  | "retro-circuit"
+  | "retro-football"
+  | "retro-hoops"
+  | "retro-innings"
+  | DailyQuizGameId
+  | WhoAreYaGameId
+  | HigherLowerGameId
+  | "football-grid"
+  | "football-connections";
+
+/** Higher or Lower on card ratings, one per sport. Borrows each sport's arcade art. */
+export type HigherLowerGameId =
+  | "football-higher-lower"
+  | "cricket-higher-lower"
+  | "basketball-higher-lower"
+  | "tennis-higher-lower"
+  | "motorsport-higher-lower";
+
+/** Who Are Ya, for the sports with career routes. Borrows Guess the Player's art. */
+export type WhoAreYaGameId = "football-who-are-ya" | "cricket-who-are-ya" | "basketball-who-are-ya";
+
+/**
+ * The Daily Quiz, one per sport. Web-only ids: they borrow their sport quiz's
+ * artwork and game mark, so the shared design system needs no new entries.
+ */
+export type DailyQuizGameId =
+  | "football-daily-quiz"
+  | "cricket-daily-quiz"
+  | "basketball-daily-quiz"
+  | "tennis-daily-quiz"
+  | "motorsport-daily-quiz";
+
+/**
+ * What kind of game an entry is, which decides where the Quiz hub files it:
+ * dailies under TODAY, quiz ladders under QUIZ PATHS, arcade games elsewhere.
+ */
+export type GameFormat =
+  | "daily-quiz"
+  | "quiz-paths"
+  | "guess-player"
+  | "who-are-ya"
+  | "grid"
+  | "higher-lower"
+  | "connections"
+  | "bingo"
+  | "mystery"
+  | "arcade";
 
 /**
  * How a game presents itself. `hero` tiles carry a painted scene and a call to

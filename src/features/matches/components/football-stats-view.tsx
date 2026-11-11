@@ -1,9 +1,9 @@
 "use client";
 import { typography } from "@statoz/design-system/web/tokens/typography";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
-import { BoltIcon, FilterChips, ShowChartIcon, accentVar } from "@statoz/design-system/web";
+import { BoltIcon, ShowChartIcon, accentVar } from "@statoz/design-system/web";
 import type { MatchDetailScoreboard, SportMatch } from "@/domain/matches";
 
 import { CommentaryView, TimelineList } from "./match-report-parts";
@@ -19,6 +19,7 @@ import {
 import { MatchTraceChart } from "./match-trace-chart";
 import { FootballShotMap } from "./football-shot-map";
 import styles from "./match-stats.module.css";
+import { MatchStatsLayout } from "./match-stats-layout";
 
 /**
  * The football report — the app's five sections, in its order.
@@ -38,23 +39,14 @@ export function FootballStatsView({
   scoreboard: MatchDetailScoreboard;
 }) {
   const [tab, setTab] = useState(tabs[0]);
-  const scroll = useRef<HTMLDivElement>(null);
-
-  const selectTab = (nextTab: string) => {
-    setTab(nextTab);
-    requestAnimationFrame(() => scroll.current?.scrollTo({ top: 0 }));
-  };
 
   return (
-    <div className={styles.statsView}>
-      <FilterChips options={tabs} selected={tab} onSelect={selectTab} label="Match report sections" />
-      <div ref={scroll} className={styles.statsScroll}>
+    <MatchStatsLayout match={match} sections={tabs} selected={tab} onSelect={setTab}>
         {tab === "OVERVIEW" ? <Overview match={match} scoreboard={scoreboard} /> : null}
         {tab === "MOMENTUM" ? <Momentum match={match} scoreboard={scoreboard} /> : null}
         {tab === "LINEUPS" ? <MatchPitchView match={match} scoreboard={scoreboard} /> : null}
         {tab === "COMMENTARY" ? <CommentaryView match={match} commentary={scoreboard.commentary} /> : null}
-      </div>
-    </div>
+    </MatchStatsLayout>
   );
 }
 

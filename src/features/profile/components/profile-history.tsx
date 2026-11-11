@@ -22,7 +22,10 @@ import type { SportTeam } from "@/domain/matches";
 import { sportModuleFor, sportOrder, type Sport } from "@/domain/sports";
 import { AuthBoundary } from "@/features/auth";
 import { AdSlot } from "@/features/ads";
-import { GameScene, gameEntryFor } from "@/features/games";
+// Direct paths, not the games barrel, which would import the profile barrel
+// back through the game screens it loads.
+import { GameScene } from "@/features/games/components/game-scenes";
+import { gameEntryFor } from "@/mocks/games";
 import { matchById, SportIcon } from "@/features/matches";
 import {
   formatKickoffDate,

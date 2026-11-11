@@ -2,6 +2,22 @@ import type { Sport } from "../sports";
 
 export type MatchStatus = "scheduled" | "live" | "finished";
 
+/**
+ * The silhouette a team badge is drawn in. Each team sport has its own crest:
+ * a striped shield for football and a ringed roundel for basketball. Cricket is
+ * choosing between crossed bats and a wicket, so a fixture can still ask for
+ * either. Everything else keeps the house octagon.
+ */
+export type TeamCrest = "octagon" | "shield" | "roundel" | "bats" | "wicket";
+
+/** The crest every team in a sport wears. */
+export function crestForSport(sport: Sport): TeamCrest {
+  if (sport === "football") return "shield";
+  if (sport === "basketball") return "roundel";
+  if (sport === "cricket") return "bats";
+  return "octagon";
+}
+
 export type SportTeam = {
   id: string;
   name: string;
@@ -14,6 +30,8 @@ export type SportTeam = {
   badgeTextColor?: string;
   /** Contrast-safe supporting label color for two-tone identity surfaces. */
   secondaryTextColor?: string;
+  /** Badge design; the octagon when unset. */
+  crest?: TeamCrest;
 };
 
 export type TennisSetScore = {

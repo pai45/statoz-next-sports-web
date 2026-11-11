@@ -147,7 +147,7 @@ export function QuizOption({
         <span
           className="ml-2 shrink-0 font-display font-black leading-none"
           style={{
-            fontSize: typography.sizeRem.p8,
+            fontSize: typography.sizeRem.p11,
             letterSpacing: "var(--ds-tracking-ultra)",
             color: ink,
           }}

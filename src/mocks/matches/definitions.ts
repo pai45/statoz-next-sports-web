@@ -1,4 +1,4 @@
-import type { MatchLeague, SportMatch, SportTeam } from "@/domain/matches";
+import { crestForSport, type MatchLeague, type SportMatch, type SportTeam, type TeamCrest } from "@/domain/matches";
 import type { Sport } from "@/domain/sports";
 import { resolveTeamPalette } from "@/mocks/identity/team-palettes.generated";
 
@@ -8,14 +8,19 @@ export const matchLeagues: MatchLeague[] = [
 
 export function team(id: string, name: string, shortName: string, color: string, secondaryColor: string, badgeTextColor = "#ffffff"): SportTeam { return { id, name, shortName, color, secondaryColor, badgeTextColor }; }
 
-type FixtureExtras = Partial<Pick<SportMatch, "homeScore" | "awayScore" | "liveMinute" | "resultLine">> & { tennisSets?: Array<[number, number]> };
+type FixtureExtras = Partial<Pick<SportMatch, "homeScore" | "awayScore" | "liveMinute" | "resultLine">> & {
+  tennisSets?: Array<[number, number]>;
+  /** A crest for both sides in place of the sport's own, to compare designs. */
+  crest?: TeamCrest;
+};
 
 export function fixture(id: string, sport: Sport, leagueId: string, home: SportTeam, away: SportTeam, kickoff: string, status: SportMatch["status"], rewardXp: number, volumeOz: number, extras: FixtureExtras = {}): SportMatch {
   const league = matchLeagues.find((candidate) => candidate.id === leagueId);
   if (!league) throw new Error(`Unknown mock league: ${leagueId}`);
   const resolve = (team: SportTeam): SportTeam => {
     const palette = resolveTeamPalette({ sport, name: team.name, abbreviation: team.shortName, competition: league.shortCode });
-    return palette ? { ...team, color: palette.primaryColor, secondaryColor: palette.secondaryColor, badgeTextColor: palette.textColor, secondaryTextColor: palette.secondaryTextColor } : team;
+    const dressed = palette ? { ...team, color: palette.primaryColor, secondaryColor: palette.secondaryColor, badgeTextColor: palette.textColor, secondaryTextColor: palette.secondaryTextColor } : team;
+    return { ...dressed, crest: extras.crest ?? crestForSport(sport) };
   };
   return { id, sport, leagueId, leagueLabel: league.shortCode, home: resolve(home), away: resolve(away), kickoff, status, rewardXp, volumeOz, homeScore: extras.homeScore, awayScore: extras.awayScore, liveMinute: extras.liveMinute, resultLine: extras.resultLine, tennisSets: extras.tennisSets?.map(([homeScore, awayScore]) => ({ homeScore, awayScore })) };
 }

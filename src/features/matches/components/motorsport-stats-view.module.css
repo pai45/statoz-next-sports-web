@@ -33,3 +33,23 @@
 .session { display: grid; gap: 1px; padding: 12px; }.session h3 { margin: 0 0 8px; color: var(--ds-color-accent-racing); font:var(--ds-weight-black) var(--ds-text-xs) var(--ds-font-display); }.session p { display: grid; grid-template-columns: 36px 1fr auto; gap: 8px; margin: 0; padding: 8px; background: var(--ds-color-background-data); font-size: var(--ds-text-xs); }.session p strong { color: var(--ds-color-text-muted); }
 .honesty, .unavailable { margin: 0; padding: 16px; border: 1px solid var(--ds-color-border-subtle); color: var(--ds-color-text-muted); font-size: var(--ds-text-xs); line-height: var(--ds-leading-body); }
 @media (width >= 900px) { .scroll { padding-right: 24px; padding-left: 24px; }.stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }.stack > :first-child, .stack > :nth-child(2), .stack > :last-child { grid-column: 1 / -1; } }
+/* Race reports share the report scroll owner and responsive panel grid. */
+.stack { gap: var(--ds-space-20); grid-template-columns: minmax(0, 1fr); align-items: start; }
+.stack>* { min-width: 0; }
+.circuit { padding: 0; min-width: 0; }
+.mapLink { min-height: 180px; }
+.mapLink:focus-visible { outline-offset: -4px; }
+.mapLink span { min-height: 44px; display: inline-flex; align-items: center; font-size: var(--ds-text-xs); }
+.pills { flex-wrap: wrap; }
+.pills span, .metrics dt, .rows small, .winner span, .axis, .honesty { font-size: var(--ds-text-xs); line-height: var(--ds-leading-body); }
+.rows { background: transparent; }
+.rows li { gap: var(--ds-space-8); border-bottom: 1px solid var(--ds-color-border-subtle); background: transparent; grid-template-columns: 4px 36px minmax(0, 1fr) minmax(50px, auto); }
+.rows li>span { overflow-wrap: anywhere; }
+.rows strong, .session strong { font: var(--ds-weight-bold) var(--ds-text-compact)/var(--ds-leading-body) var(--ds-font-body); text-align: right; font-variant-numeric: tabular-nums; }
+.session { padding: 0; }
+.session p { grid-template-columns: 36px minmax(0, 1fr) auto; font-size: var(--ds-text-compact); gap: var(--ds-space-8); }
+.session p>span { overflow-wrap: anywhere; }
+.chartPanel { padding: 0; min-width: 0; }
+.chartReadout { flex-wrap: wrap; gap: var(--ds-space-8); font-size: var(--ds-text-sm); }
+.axis { flex-wrap: wrap; gap: var(--ds-space-8); }
+@container match-report (min-width: 688px) { .stack { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

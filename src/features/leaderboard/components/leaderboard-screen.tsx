@@ -1,150 +1,131 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { flushSync } from "react-dom";
 
 import {
-  accentVar,
-  SearchIcon,
-  UnderlineTabs,
-  withAlpha,
-  type UnderlineTab,
-} from "@statoz/design-system/web";
-import { sportModuleFor, sportOrder, type Sport } from "@/domain/sports";
+  AdaptiveDrawer,
+  ChevronRightIcon,
+  ExpandableSearchField,
+  FilterChips,
+  NoDataState,
+  PageSearchHeader,
+  PersonSearchIcon,
+  ScheduleIcon,
+} from "@statoz/design-system/games";
+import { accentVar } from "@statoz/design-system/web";
+import { sportModuleFor, type Sport } from "@/domain/sports";
 import { AdSlot } from "@/features/ads";
 import { useAuthSession, useRequireAuth } from "@/features/auth";
 import { SportIcon } from "@/features/matches/components/sport-icon";
-import {
-  RivalDossierOverlay,
-  usePlayerStanding,
-  type PlayerStanding,
-} from "@/features/profile";
-
+import { RivalDossierOverlay } from "@/features/profile/components/rival-dossier";
+import { usePlayerStanding, type PlayerStanding } from "@/features/profile/state/player-standing";
 import { isPro, rivalSeedByName } from "@/mocks/leaderboard";
-import { sportGameDecks } from "@/mocks/games";
-import { leaderboardTypeOrder } from "../scoring";
-import { leaderboardLeagues } from "../leagues";
-import { useBoardEntries } from "../state/use-board-entries";
-import type {
-  GameMode,
-  LeaderboardEntry,
-  LeaderboardType,
-  MatchesBoard,
-  TournamentScope,
-} from "../types";
 
-import { LeaderboardEmpty } from "./leaderboard-empty";
-import { LeaderboardFilters } from "./leaderboard-filters";
-import styles from "./leaderboard.module.css";
-import { RankPodium } from "./rank-podium";
-import { RankRow } from "./rank-row";
-import { RankUserBar } from "./rank-user-bar";
-import { LeagueDial } from "./league-dial";
+import { leaderboardCountdown, leaderboardWindow, windowRange } from "../periods";
+import { searchEntries } from "../scoring";
+import {
+  boardContext,
+  boardTitle,
+  leaderboardHref,
+  normalizeSelection,
+  parseLeaderboardSelection,
+  type LeaderboardSelection,
+} from "../selection";
+import { useBoardEntries } from "../state/use-board-entries";
+import { useLeaderboardClock } from "../state/use-leaderboard-clock";
+import type { GameMode, LeaderboardEntry, TournamentScope } from "../types";
+
+import { BoardPicker } from "./board-picker";
+import { LeaderboardDetails } from "./leaderboard-details";
+import { PodiumStage } from "./podium-stage";
+import { comparisonFor, Standings, StandingsEmpty } from "./standings";
+import { YourStanding } from "./your-standing";
+import styles from "./board.module.css";
 
 /**
- * LEADERBOARD — where you stand.
+ * LEADERBOARD — where you stand, laid out like the Games web's board.
  *
- * Two strips over one board: the sport, then what is being ranked. The sport
- * only ever changes the accent, which is true of the app too — there is one
- * field of players, and the boards are six different lenses on their single
- * canonical XP rather than six different tables.
- *
- * The phone is the app exactly: strips, filters, a scrolling podium and rows,
- * and your own rank docked below so it never scrolls away. Once there is room
- * the board keeps its proportions and the things you *set* — the filters — move
- * out of the reading column into a sidebar, where your rank simply stays in
- * view instead of having to be pinned.
+ * A page title with player search, every board (each sport's leagues under
+ * MATCHES, its games under QUIZ) in the left rail, and one bracketed board:
+ * its name and period chips, the period's dates and reset clock, the podium,
+ * then the standings table. Below desktop width the rail folds into a drawer
+ * behind the board's title, and your own rank docks above the bottom bar.
  */
 
-const typeLabels: Record<LeaderboardType, string> = {
-  matches: "MATCHES",
-  games: "QUIZ",
-};
-
-const typeTabs: UnderlineTab[] = leaderboardTypeOrder.map((id) => ({
-  id,
-  label: typeLabels[id],
-}));
-
-const sportTabs: UnderlineTab[] = sportOrder.map((sport) => ({
-  id: sport,
-  label: sportModuleFor(sport).label.toUpperCase(),
-  icon: <SportIcon sport={sport} size={21} />,
-}));
-
-/** Rows are dealt in behind the three podium cards. */
-function delay(index: number): CSSProperties {
-  return { "--enter-delay": `${(index + 3) * 70}ms` } as CSSProperties;
-}
+const scopeChips: { id: TournamentScope; label: string }[] = [
+  { id: "weekly", label: "WEEKLY" },
+  { id: "season", label: "SEASON" },
+  { id: "allTime", label: "ALL-TIME" },
+];
 
 type OpenRival = { name: string; rank: number; xp: number; pro: boolean };
 
 export function LeaderboardScreen() {
   const session = useAuthSession();
   if (session.status === "authenticated") return <PersonalizedLeaderboard />;
-  return <LeaderboardBoard />;
+  return <LeaderboardWorkspace />;
 }
 
 function PersonalizedLeaderboard() {
   const player = usePlayerStanding();
-  return <LeaderboardBoard player={player} authenticated />;
+  return <LeaderboardWorkspace player={player} authenticated />;
 }
 
-function LeaderboardBoard({
-  player = null,
-  authenticated = false,
-}: {
-  player?: PlayerStanding | null;
-  authenticated?: boolean;
-}) {
+function LeaderboardWorkspace({ player = null, authenticated = false }: { player?: PlayerStanding | null; authenticated?: boolean }) {
   const router = useRouter();
   const query = useSearchParams();
   const requireAuth = useRequireAuth();
-  const initialSport = sportOrder.includes(query.get("sport") as Sport) ? query.get("sport") as Sport : "football";
-  const initialType: LeaderboardType = query.get("type") === "games" ? "games" : "matches";
-  const [sport, setSport] = useState<Sport>(initialSport);
-  const [type, setType] = useState<LeaderboardType>(initialType);
-  const [board, setBoard] = useState<MatchesBoard>(query.get("board") === "teams" ? "teams" : "players");
-  const [scope, setScope] = useState<TournamentScope>(["weekly", "season", "allTime"].includes(query.get("scope") ?? "") ? query.get("scope") as TournamentScope : "weekly");
-  const initialMode = sportGameDecks[initialSport].includes(query.get("mode") as GameMode) ? query.get("mode") as GameMode : sportGameDecks[initialSport][0];
-  const [mode, setMode] = useState<GameMode>(initialMode);
-  const [selectedLeague, setSelectedLeague] = useState<Record<Sport, string>>(() => Object.fromEntries(sportOrder.map((entry) => [entry, query.get("league") && entry === initialSport && leaderboardLeagues[entry].some((league) => league.id === query.get("league")) ? query.get("league") : leaderboardLeagues[entry][0].id])) as Record<Sport, string>);
+  const now = useLeaderboardClock();
+  const [selection, setSelection] = useState<LeaderboardSelection>(() => parseLeaderboardSelection(query));
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [openRival, setOpenRival] = useState<OpenRival | null>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const dossierTrigger = useRef<HTMLElement | null>(null);
+  const boardTitleId = useId();
 
-  const accent = accentVar(sportModuleFor(sport).accent);
+  const href = leaderboardHref(selection);
+  const currentParams = query.toString();
+  useEffect(() => {
+    if (currentParams !== href.split("?")[1]) router.replace(href, { scroll: false });
+  }, [currentParams, href, router]);
+
   const { entries, meta, user, isTeamBoard } = useBoardEntries({
-    type,
-    board,
-    scope,
-    mode,
-    sport,
-    leagueId: selectedLeague[sport],
+    type: selection.type,
+    board: selection.board,
+    scope: selection.scope,
+    mode: selection.mode,
+    leagueId: selection.league,
     player,
   });
 
-  useEffect(() => {
-    const params = new URLSearchParams({ type, sport, mode, board, scope, league: selectedLeague[sport] });
-    router.replace(`/leaderboard?${params.toString()}`, { scroll: false });
-  }, [board, mode, router, scope, selectedLeague, sport, type]);
+  const accent = accentVar(sportModuleFor(selection.sport).accent);
+  const title = boardTitle(selection);
+  const context = boardContext(selection);
+  const periodWindow = now === null ? null : leaderboardWindow(selection.scope, now);
+  const range = periodWindow ? windowRange(periodWindow) : null;
+  const searching = search.trim().length > 0;
+  const results = searching ? searchEntries(entries, search) : entries;
+  const hasPodium = !searching && entries.length >= 3;
+  const tableEntries = searching ? results : hasPodium ? entries.slice(3) : entries;
+  const boardKey = `${selection.type}-${selection.sport}-${selection.league}-${selection.mode}-${selection.board}-${selection.scope}`;
 
-  const changeSport = (next: Sport) => {
-    setSport(next);
-    if (!sportGameDecks[next].includes(mode)) setMode(sportGameDecks[next][0]);
-  };
+  function update(next: Partial<LeaderboardSelection>) {
+    setSelection((current) => normalizeSelection({ ...current, ...next }));
+  }
 
-  /**
-   * Your own row is your profile; a rival's opens their dossier. A team has no
-   * player behind it, so a team board's rows are inert — as they are in the app.
-   */
+  function selectBoard(sport: Sport, id: string) {
+    update(selection.type === "games" ? { sport, mode: id as GameMode } : { sport, league: id });
+    setPickerOpen(false);
+  }
+
+  /** Your own row is your profile; a rival's opens their dossier. Team rows open nothing. */
   function open(entry: LeaderboardEntry) {
-    if (entry.team) return;
     if (!authenticated) {
-      requireAuth({
-        intent: "compare profiles",
-        message: "Log in to compare your standing with other players.",
-        returnTo: "/leaderboard",
-      });
+      requireAuth({ intent: "compare profiles", message: "Log in to compare your standing with other players.", returnTo: href });
       return;
     }
     if (entry.isUser) {
@@ -153,152 +134,103 @@ function LeaderboardBoard({
     }
     const seed = rivalSeedByName(entry.name);
     if (!seed) return;
-    setOpenRival({
-      name: seed.name,
-      rank: entry.rank,
-      xp: seed.base,
-      pro: isPro(seed),
-    });
+    dossierTrigger.current = document.activeElement as HTMLElement | null;
+    setOpenRival({ name: seed.name, rank: entry.rank, xp: seed.base, pro: isPro(seed) });
   }
-
   const onOpen = isTeamBoard ? undefined : open;
 
-  // A short board (under three) has no podium to build and lists everyone.
-  const hasPodium = entries.length >= 3;
-  const podium = hasPodium ? entries.slice(0, 3) : [];
-  const rows = hasPodium ? entries.slice(3) : entries;
+  /** Brings your row (or podium place) into view and flashes it. */
+  function showMyRow() {
+    if (searching) flushSync(() => setSearch(""));
+    const row = document.querySelector<HTMLElement>("[data-leaderboard-workspace] [data-self]");
+    if (!row) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    row.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+    row.removeAttribute("data-flash");
+    void row.offsetWidth;
+    row.setAttribute("data-flash", "");
+    window.setTimeout(() => row.removeAttribute("data-flash"), 1300);
+  }
 
-  const filters = (
-    <LeaderboardFilters
-      type={type}
-      sport={sport}
-      accent={accent}
-      board={board}
-      onBoard={setBoard}
-      scope={scope}
-      onScope={setScope}
-      mode={mode}
-      onMode={setMode}
-    />
-  );
+  const standing = user ? <YourStanding entry={user} meta={meta} scope={selection.scope} avatarSrc={player?.avatarSrc} frameColor={player?.frameColor} onShow={showMyRow} /> : null;
+  const picker = <BoardPicker selection={selection} accent={accent} onType={(type) => update({ type })} onSelect={selectBoard} />;
 
-  const userBar = user ? (
-    <RankUserBar
-      user={user}
-      meta={meta}
-      accent={accent}
-      avatarSrc={player?.avatarSrc}
-      frameColor={player?.frameColor}
-      onOpen={user.team ? undefined : () => router.push("/profile")}
-    />
-  ) : null;
+  return <div className="flex flex-1 flex-col" style={{ "--leaderboard-accent": accent } as CSSProperties} data-leaderboard-workspace>
+    <div className={styles.workspace}>
+      <PageSearchHeader title="Leaderboard">
+        <ExpandableSearchField ref={searchInput} label={isTeamBoard ? "Search leaderboard teams" : "Search leaderboard players"}
+          placeholder={isTeamBoard ? "Search teams…" : "Search players…"} value={search} enterKeyHint="search"
+          onChange={(event) => setSearch(event.target.value)} onClear={() => { setSearch(""); searchInput.current?.focus(); }} />
+      </PageSearchHeader>
 
-  return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex justify-end border-b border-line-muted px-4 py-2">
-        <Link className="flex min-h-10 items-center gap-2 px-3 font-display text-2xs font-black tracking-ultra text-muted hover:text-cyan" href={`/leaderboard/search?returnTo=${encodeURIComponent(`/leaderboard?type=${type}&sport=${sport}&mode=${mode}&board=${board}&scope=${scope}&league=${selectedLeague[sport]}`)}`}><SearchIcon size={18} /> FIND PLAYER</Link>
-      </div>
-      <UnderlineTabs
-        label="Browse by sport"
-        tabs={sportTabs}
-        activeIndex={sportOrder.indexOf(sport)}
-        accent={accent}
-        iconColors={sportOrder.map((entry) =>
-          accentVar(sportModuleFor(entry).accent),
-        )}
-        onChange={(index) => changeSport(sportOrder[index])}
-        className="shrink-0"
-      />
-      <UnderlineTabs
-        label="Leaderboard"
-        tabs={typeTabs}
-        activeIndex={leaderboardTypeOrder.indexOf(type)}
-        accent={accent}
-        onChange={(index) => setType(leaderboardTypeOrder[index])}
-        className="shrink-0"
-      />
-      <div style={{ "--leaderboard-accent": accent } as CSSProperties}>
-        <LeagueDial leagues={leaderboardLeagues[sport]} selected={selectedLeague[sport]} onSelect={(league) => setSelectedLeague((current) => ({ ...current, [sport]: league }))} />
-      </div>
-
-      <div
-        /* A new board is a new element, so it arrives rather than mutating. */
-        key={`${type}-${board}-${scope}-${mode}-${selectedLeague[sport]}`}
-        className={`${styles.boardIn} mx-auto flex w-full max-w-160 flex-col gap-4.5 px-4 pb-3.5 pt-2 lg:grid lg:max-w-260 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-5 lg:px-6 lg:pb-8 lg:pt-5`}
-      >
-        <aside className="flex flex-col gap-2.5 lg:sticky lg:top-5 lg:col-start-2 lg:row-start-1 lg:gap-3.5">
-          {filters}
-          <div className="hidden lg:block">{userBar}</div>
+      <div className={styles.workspaceGrid}>
+        <aside className={styles.rail}>
+          {picker}
+          {standing}
           {entries.length > 0 ? <AdSlot placement="leaderboard-rail" /> : null}
         </aside>
 
-        <div className="lg:col-start-1 lg:row-start-1">
-          {entries.length === 0 ? (
-            <LeaderboardEmpty type={type} accent={accent} />
-          ) : (
-            <>
-              <RankPodium
-                entries={podium}
-                meta={meta}
-                accent={accent}
-                userAvatarSrc={player?.avatarSrc}
-                userFrameColor={player?.frameColor}
-                onOpen={onOpen}
-              />
+        <div className={styles.boardColumn}>
+          <section className={styles.board} aria-labelledby={boardTitleId} data-type={selection.type} data-scope={selection.scope}>
+            <header className={styles.boardHeader}>
+              <div className={styles.boardIdentity}>
+                <span className={styles.identityMark}><SportIcon sport={selection.sport} size={24} aria-hidden="true" /></span>
+                <div><span className={styles.eyebrow}>{context}{isTeamBoard ? " · TEAMS" : ""}</span><h2 id={boardTitleId}>{title}</h2></div>
+              </div>
+              <button type="button" className={styles.mobilePicker} onClick={() => setPickerOpen(true)}
+                aria-label={`Choose leaderboard. Showing ${context}, ${title}`} aria-haspopup="dialog" aria-expanded={pickerOpen}>
+                <span className={styles.identityMark}><SportIcon sport={selection.sport} size={20} aria-hidden="true" /></span>
+                <span><span className={styles.eyebrow}>{context}</span><strong>{title}</strong></span>
+                <ChevronRightIcon size={18} aria-hidden="true" />
+              </button>
+              <div className={styles.boardControls}>
+                {selection.type === "matches" && <FilterChips label="Rank players or teams" options={["PLAYERS", "TEAMS"]}
+                  selected={selection.board === "teams" ? "TEAMS" : "PLAYERS"} accent={accent} className={styles.chips}
+                  onSelect={(value) => update({ board: value === "TEAMS" ? "teams" : "players" })} />}
+                <FilterChips label="Ranking period" options={scopeChips.map((chip) => chip.label)}
+                  selected={scopeChips.find((chip) => chip.id === selection.scope)!.label} accent={accent} className={styles.chips}
+                  onSelect={(value) => update({ scope: scopeChips.find((chip) => chip.label === value)?.id ?? "weekly" })} />
+              </div>
+              <div className={styles.periodMeta}>
+                <span>
+                  {selection.scope === "season" && periodWindow && <><span className={styles.seasonLabel}>{periodWindow.label}</span><span className={styles.seasonLabel} aria-hidden="true"> · </span></>}
+                  {selection.scope === "allTime" ? "All-time standings" : range ?? "Loading period…"}
+                </span>
+                <span>{entries.length} {isTeamBoard ? "teams" : "players"}</span>
+                <span className={styles.reset}>
+                  <ScheduleIcon size={13} aria-hidden="true" />
+                  {selection.scope === "allTime" ? "Never resets" : `${selection.scope === "weekly" ? "Resets" : "Ends"} ${now !== null && periodWindow?.end != null ? `in ${leaderboardCountdown(periodWindow.end, now)}` : "…"}`}
+                </span>
+              </div>
+            </header>
 
-              {rows.length > 0 ? (
-                <div className={`flex flex-col gap-2.5 ${hasPodium ? "mt-6" : ""}`}>
-                  {rows.map((entry, index) => (
-                    <div
-                      key={entry.name}
-                      className={styles.dealIn}
-                      style={delay(index)}
-                    >
-                      <RankRow
-                        entry={entry}
-                        accent={accent}
-                        meta={meta}
-                        avatarSrc={player?.avatarSrc}
-                        frameColor={player?.frameColor}
-                        onOpen={onOpen}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </>
-          )}
+            <div className={styles.boardBody} key={boardKey}>
+              {hasPodium && <PodiumStage entries={entries.slice(0, 3)} meta={meta} avatarSrc={player?.avatarSrc} frameColor={player?.frameColor} onOpen={onOpen} />}
+              {entries.length === 0 ? <StandingsEmpty type={selection.type} />
+                : searching && results.length === 0 ? <NoDataState icon={PersonSearchIcon}
+                  title={search.trim().length < 2 ? "Find your rival" : isTeamBoard ? "No team found" : "No player found"}
+                  message={search.trim().length < 2 ? "Enter at least two characters to search this board." : "Try another name or clear your search."}
+                  accent={accent} className="min-h-56" />
+                : tableEntries.length > 0 ? <Standings entries={tableEntries} meta={meta} scope={selection.scope} teamBoard={isTeamBoard}
+                  avatarSrc={player?.avatarSrc} frameColor={player?.frameColor} onOpen={onOpen} />
+                : null}
+            </div>
+
+            <footer className={styles.boardFooter}>
+              <span>Change vs {comparisonFor(selection.scope)}</span>
+              <button type="button" className={styles.textAction} onClick={() => setRulesOpen(true)}>HOW RANKING WORKS <span aria-hidden="true">↗</span></button>
+            </footer>
+          </section>
         </div>
       </div>
-
-      {/*
-        Docked so it never scrolls away, as the app pins it. The bar nav is
-        sticky and floats over the page, so this sticks exactly its height
-        above it — and lands in flow beside it at the end of the scroll.
-      */}
-      {userBar ? (
-        <div
-          className="sticky z-10 mt-auto border-t bg-background px-4 pb-3 pt-2.5 lg:hidden"
-          style={{
-            bottom:
-              "calc(var(--platform-nav-height) + env(safe-area-inset-bottom))",
-            borderColor: withAlpha("var(--ds-color-border-strong)", 0.32),
-          }}
-        >
-          {userBar}
-        </div>
-      ) : null}
-
-      {openRival && authenticated ? (
-        <RivalDossierOverlay
-          name={openRival.name}
-          rank={openRival.rank}
-          xp={openRival.xp}
-          pro={openRival.pro}
-          userRank={user?.rank ?? openRival.rank}
-          onClose={() => setOpenRival(null)}
-        />
-      ) : null}
     </div>
-  );
+
+    {standing ? <div className={styles.dock}>{standing}</div> : null}
+
+    <AdaptiveDrawer open={pickerOpen} onClose={() => setPickerOpen(false)} title="CHOOSE A LEADERBOARD" className={styles.drawer}>{pickerOpen ? picker : null}</AdaptiveDrawer>
+    <LeaderboardDetails open={rulesOpen} context={`${context} · ${title}`} scope={selection.scope} periodWindow={periodWindow} onClose={() => setRulesOpen(false)} />
+    {openRival && authenticated ? <RivalDossierOverlay name={openRival.name} rank={openRival.rank} xp={openRival.xp} pro={openRival.pro}
+      userRank={user?.rank ?? openRival.rank}
+      onClose={() => { setOpenRival(null); requestAnimationFrame(() => dossierTrigger.current?.focus()); }} /> : null}
+  </div>;
 }

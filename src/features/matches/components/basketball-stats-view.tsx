@@ -17,6 +17,7 @@ import {
 import { MatchTraceChart } from "./match-trace-chart";
 import { BasketballShotMap } from "./basketball-shot-map";
 import styles from "./match-stats.module.css";
+import { MatchStatsLayout } from "./match-stats-layout";
 
 /**
  * The basketball report: the model's read, the flow that produced it, the
@@ -35,9 +36,7 @@ export function BasketballStatsView({
   const [tab, setTab] = useState(tabs[0]);
 
   return (
-    <div className={styles.statsView}>
-      <FilterChips options={tabs} selected={tab} onSelect={setTab} label="Match report sections" />
-      <div className={styles.statsScroll}>
+    <MatchStatsLayout match={match} sections={tabs} selected={tab} onSelect={setTab}>
         {tab === "OVERVIEW" ? <Overview match={match} scoreboard={scoreboard} /> : null}
         {tab === "FLOW" ? <Flow match={match} scoreboard={scoreboard} /> : null}
         {tab === "PLAYS" ? (
@@ -52,8 +51,7 @@ export function BasketballStatsView({
         ) : null}
         {tab === "BOX SCORE" ? <BoxScoreView match={match} scoreboard={scoreboard} /> : null}
         {tab === "TEAMS" ? <LineupsView match={match} scoreboard={scoreboard} /> : null}
-      </div>
-    </div>
+    </MatchStatsLayout>
   );
 }
 
@@ -182,10 +180,11 @@ function BoxScoreView({ match, scoreboard }: { match: SportMatch; scoreboard: Ma
   return (
     <div className={styles.stack}>
       {(["home", "away"] as const).map((side) => (
-        <section key={side} className={styles.tight}>
+        <section key={side} className={`${styles.tight} spanFull`}>
           <SectionHeading label={(side === "home" ? match.home.name : match.away.name).toUpperCase()} />
           <StatsRow accent={side === "home" ? match.home.color : match.away.color}>
-            <table className={styles.statTable}>
+            <div className={styles.tableScroll} role="region" aria-label={`${side === "home" ? match.home.name : match.away.name} box score`} tabIndex={0}><table className={styles.statTable}>
+              <caption className="sr-only">{side === "home" ? match.home.name : match.away.name} player totals</caption>
               <thead>
                 <tr>
                   <th className={styles.tableHead}>PLAYER</th>
@@ -206,7 +205,7 @@ function BoxScoreView({ match, scoreboard }: { match: SportMatch; scoreboard: Ma
                     </tr>
                   ))}
               </tbody>
-            </table>
+            </table></div>
           </StatsRow>
         </section>
       ))}

@@ -110,11 +110,16 @@ export function QuizSetTile({
       }}
       aria-label={
         progress.attempts > 0
-          ? `Set ${setNumber}, ${state}, best ${progress.bestCorrect} of ${questionsPerSet}, ${stars} of 3 stars`
-          : `Set ${setNumber}, ${state}`
+          ? `Set ${setNumber}, ${status.toLowerCase()}, best ${progress.bestCorrect} of ${questionsPerSet}, ${stars} of 3 stars, replay costs coins`
+          : state === "available"
+            ? `Set ${setNumber}, play free, +${modeRewards[mode]} XP per correct answer`
+            : `Set ${setNumber}, ${status.toLowerCase()}`
       }
     >
-      <span className="flex h-full flex-col items-center justify-center gap-1">
+      {/* Three things only, so each can be read at 11px in a fifth of a phone:
+          what you can do, which set, and how it went. The rest is in the
+          accessible name and the briefing. */}
+      <span className="flex h-full flex-col items-center justify-center gap-1.5">
         <Icon size={18} style={{ color }} />
 
         <span
@@ -125,34 +130,21 @@ export function QuizSetTile({
         </span>
 
         {graded ? (
-          <StarRating earned={stars} />
-        ) : (
+          <>
+            <StarRating earned={stars} />
+            <span
+              className="ds-tabular font-display font-black leading-none text-muted"
+              style={{ fontSize: typography.sizeRem.p11 }}
+            >
+              {launching ? "…" : `${progress.bestCorrect}/${questionsPerSet}`}
+            </span>
+          </>
+        ) : state === "available" || state === "upcoming" ? (
           <span
-            className="truncate font-display font-black leading-none"
-            style={{
-              fontSize: typography.sizeRem.p6_5,
-              letterSpacing: "var(--ds-tracking-label)",
-              color,
-            }}
+            className="font-display font-black leading-none"
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-label)", color }}
           >
-            {launching ? "OPENING" : status}
-          </span>
-        )}
-
-        {graded || state === "available" ? (
-          <span
-            className="truncate font-display font-black leading-none"
-            style={{
-              fontSize: typography.sizeRem.p5_8,
-              letterSpacing: "var(--ds-tracking-tight)",
-              color: graded ? "var(--ds-color-text-muted)" : withAlpha(color, 0.8),
-            }}
-          >
-            {graded
-              ? launching
-                ? "OPENING"
-                : `${status} · ${progress.bestCorrect}/${questionsPerSet}`
-              : `+${modeRewards[mode]} XP EACH`}
+            {launching ? "…" : state === "available" ? "FREE" : "SOON"}
           </span>
         ) : null}
       </span>

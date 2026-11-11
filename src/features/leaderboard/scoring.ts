@@ -32,8 +32,10 @@ export function jsSafeHash(value: string): number {
   return hash;
 }
 
+/** An empty record stays at zero, and no score drops below it. */
 export function leagueAdjustedScore(base: number, leagueId: string): number {
-  return base + (jsSafeHash(leagueId) % 700) - 320;
+  if (base <= 0) return 0;
+  return Math.max(0, base + (jsSafeHash(leagueId) % 700) - 320);
 }
 
 /** What the score column is measured in. */
@@ -43,6 +45,11 @@ export function scoreMetaFor(
 ): ScoreMeta {
   if (isTeamBoard) return { unit: "PTS" };
   return { unit: type === "games" ? "W" : "XP" };
+}
+
+/** A season is six weeks of play, and all-time is twenty-seven. */
+function weeksIn(scope: TournamentScope): number {
+  return scope === "weekly" ? 1 : scope === "season" ? 6 : 27;
 }
 
 /** A rival's canonical XP, read through the active board's lens. */
@@ -55,10 +62,29 @@ export function scoreFor(
 ): number {
   switch (type) {
     case "matches":
-      // A season is six weeks of play, and all-time is twenty-seven.
-      return leagueAdjustedScore(scope === "weekly" ? base : scope === "season" ? base * 6 : base * 27, leagueId);
+      return leagueAdjustedScore(base * weeksIn(scope), leagueId);
     case "games":
-      // Wins, not XP — a rough win count with a nudge per mode.
-      return Math.max(0, Math.round(base / 55) + (jsSafeHash(mode) % 9) - 4);
+      // Wins, not XP — a rough weekly win count with a nudge per mode.
+      if (base <= 0) return 0;
+      return Math.max(0, Math.round(base / 55) + (jsSafeHash(mode) % 9) - 4) * weeksIn(scope);
   }
+}
+
+/**
+ * Places a scored field in order. The board ranks on the score it shows, so
+ * the numbers always read top-down; equal scores fall back to the name, which
+ * keeps the order stable between renders.
+ */
+export function rankByScore<T extends { name: string; score: number }>(field: readonly T[]): (T & { rank: number })[] {
+  return [...field]
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+}
+
+/** Entries whose name holds every word of the query; two characters minimum. */
+export function searchEntries<T extends { name: string }>(entries: readonly T[], query: string): T[] {
+  const normalized = query.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+  if (normalized.length < 2) return [];
+  const words = normalized.split(" ");
+  return entries.filter((entry) => words.every((word) => entry.name.toLocaleLowerCase().includes(word)));
 }

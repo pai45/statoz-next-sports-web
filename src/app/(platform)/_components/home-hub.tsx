@@ -3,8 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
-import {
-} from "@statoz/design-system/web";
 import { sportOrder, type Sport } from "@/domain/sports";
 import { gameCountForSport } from "@/features/games";
 import {
@@ -139,7 +137,7 @@ export function HomeHub({ matchFeed, gamesFeed, sportDecks, mode }: HomeHubProps
             saveFeedScroll(event.currentTarget);
             const link=(event.target as HTMLElement).closest('a[href]');
             if(link && new URL(link.getAttribute('href')!,window.location.href).pathname !== window.location.pathname) leavingFeed.current=true;
-          }} className={`flex-1 overflow-y-auto py-3 ${matchSport === null ? "" : "px-5"}`}>
+          }} className={`@container flex-1 overflow-y-auto py-3 ${matchSport === null ? "" : "px-5"}`}>
             {matchSport === null ? (
               <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
                 {matchFeed}

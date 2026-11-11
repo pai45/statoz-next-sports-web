@@ -178,7 +178,7 @@
 
 /* Cards sit at their own height; a stretched cell would show its offset edge
    above the frame instead of below it. */
-.hubList { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 22px; }
+.hubList { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--ds-space-24); }
 
 .hubCard {
   position: relative;
@@ -190,6 +190,7 @@
   text-align: left;
   cursor: pointer;
   isolation: isolate;
+  transition: transform 160ms ease;
 }
 
 .hubCard:disabled { cursor: not-allowed; }
@@ -198,23 +199,17 @@
 .hubShadow {
   position: absolute;
   z-index: -1;
-  inset: 6px 0 -6px 0;
-  background: color-mix(in srgb, var(--hub-accent) 30%, var(--ds-color-fixture-shadow));
+  inset: 4px 0 -4px;
+  background: color-mix(in srgb, var(--hub-accent) 22%, var(--ds-color-fixture-shadow));
   clip-path: var(--ds-clip-compact-hud);
 }
 
 .hubFrame {
   position: relative;
-  display: flex;
-  min-height: 84px;
-  gap: 12px;
-  padding: 12px 12px 13px;
+  display: block;
+  padding: var(--ds-space-20) var(--ds-space-20) 0;
   clip-path: var(--ds-clip-compact-hud);
-  background:
-    linear-gradient(135deg,
-      color-mix(in srgb, var(--home-color) 16%, var(--ds-color-background-quiz-hub)),
-      color-mix(in srgb, var(--away-color) 16%, var(--ds-color-background-quiz-hub)));
-  background: color-mix(in srgb, var(--hub-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--hub-accent) 36%, var(--ds-color-border-subtle));
 }
 
 /* The reward-reveal moment is the one card that breathes — and the only glow. */
@@ -224,13 +219,14 @@
   inset: 1px;
   clip-path: var(--ds-clip-compact-hud);
   background:
-    linear-gradient(135deg,
-      color-mix(in srgb, var(--home-color) 16%, var(--ds-color-background-quiz-hub)),
-      color-mix(in srgb, var(--away-color) 16%, var(--ds-color-background-quiz-hub)));
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--hub-accent) 9%, transparent), transparent 70%),
+    var(--ds-color-background-secondary);
   content: "";
 }
 
 .hubFrame > * { position: relative; z-index: 1; }
+.hubHeading { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--ds-space-12); }
+.hubIdentity { min-width: 0; }
 
 .hubGlow .hubFrame { background: color-mix(in srgb, var(--hub-accent) 60%, transparent); }
 .hubGlow { animation: hubBreathe 2.8s ease-in-out infinite; }
@@ -242,78 +238,109 @@
 
 .hubBlocked .hubFrame { filter: saturate(.5) brightness(.86); }
 
-.hubCard:hover:not(:disabled) .hubFrame { filter: brightness(1.06); }
+.hubCard:hover:not(:disabled) .hubFrame { background: var(--hub-accent); }
+.hubCard:hover:not(:disabled) .hubCta { background: color-mix(in srgb, var(--hub-accent) 12%, transparent); }
+.hubCard:active { transform: translateY(2px); }
 .hubCard:focus-visible { outline: 2px solid var(--hub-accent); outline-offset: 2px; }
 
 .indexPlate {
+  position: relative;
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   flex: none;
   place-items: center;
-  clip-path: polygon(8px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 2px 100%, 0 calc(100% - 2px), 0 8px);
-  background: color-mix(in srgb, var(--hub-accent) 16%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hub-accent) 60%, transparent);
+  clip-path: var(--ds-clip-field);
+  background: color-mix(in srgb, var(--hub-accent) 50%, var(--ds-color-border-default));
   color: var(--hub-accent);
-  font-size:var(--ds-size-p15);
+  font-size: var(--ds-text-lg);
   letter-spacing: 0;
 }
+.indexPlate::before { content: ""; position: absolute; inset: 1px; clip-path: inherit; background: var(--ds-color-background-elevated); }
+.indexPlate > span { position: relative; }
 
-.hubTag { color: var(--hub-accent); font-size:var(--ds-size-p8_5); letter-spacing: .16em; }
-.hubTitle { margin: 4px 0 0; color: var(--ds-color-text-default); font-size:var(--ds-size-p14_5); line-height: 1.2; }
-.hubSubtitle { margin: 6px 0 0; color: var(--ds-color-text-muted); font-family: var(--ds-font-body); font-size:var(--ds-size-p11_5); font-weight:var(--ds-weight-regular); letter-spacing: 0; }
+.hubTag { color: var(--hub-accent); font-size: var(--ds-text-2xs); letter-spacing: var(--ds-tracking-wide); }
+.hubTitle { margin: var(--ds-space-6) 0 0; color: var(--ds-color-text-default); font-size: var(--ds-text-lg); line-height: var(--ds-leading-tight); letter-spacing: var(--ds-tracking-tight); overflow-wrap: anywhere; }
+.hubSubtitle { margin: var(--ds-space-16) 0 0; color: var(--ds-color-text-subtle); font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-regular); letter-spacing: 0; line-height: var(--ds-leading-body); }
 
 .rewardPill {
+  display: grid;
+  gap: var(--ds-space-4);
   flex: none;
-  padding: 4px 8px;
+  padding: var(--ds-space-8) var(--ds-space-10);
   border: 1px solid color-mix(in srgb, var(--pill-color) 50%, transparent);
   background: color-mix(in srgb, var(--pill-color) 12%, transparent);
   color: var(--pill-color);
-  font-size:var(--ds-size-p9);
+  font-size: var(--ds-text-xs);
   letter-spacing: .06em;
+  text-align: right;
+  white-space: nowrap;
 }
+.rewardLabel { color: var(--ds-color-text-muted); font-family: var(--ds-font-body); font-size: var(--ds-text-2xs); letter-spacing: var(--ds-tracking-wide); }
+.hubDetails { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-8) var(--ds-space-12); margin-top: var(--ds-space-16); }
+.questionCount { color: var(--ds-color-text-muted); font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-semibold); white-space: nowrap; }
 
-.contestStrip { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+.contestStrip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-8); }
 .contestChip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3.5px 7px;
+  gap: var(--ds-space-4);
+  padding: var(--ds-space-6) var(--ds-space-8);
   border: 1px solid color-mix(in srgb, var(--chip-color) 45%, transparent);
   background: color-mix(in srgb, var(--chip-color) 10%, transparent);
   color: var(--chip-color);
-  font-size:var(--ds-size-p8_5);
-  letter-spacing: .08em;
+  font-family: var(--ds-font-body);
+  font-size: var(--ds-text-xs);
+  letter-spacing: 0;
+  line-height: var(--ds-leading-tight);
 }
+.contestChip svg { flex: none; }
 .contestChipFilled { background: color-mix(in srgb, var(--chip-color) 18%, transparent); }
 
 .hubTrack {
-  height: 6px;
-  margin-top: 11px;
-  background: rgb(0 0 0 / 35%);
+  height: var(--ds-space-4);
+  margin-top: var(--ds-space-16);
+  background: var(--ds-color-background-muted);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hub-accent) 22%, transparent);
 }
 .hubTrack i { display: block; height: 100%; background: var(--track-accent); transition: width 240ms ease-out; }
 
 .hubDivider {
   height: 1px;
-  margin: 10px 0 9px;
-  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--hub-accent) 62%, transparent), transparent);
+  margin: var(--ds-space-20) 0 0;
+  background: color-mix(in srgb, var(--hub-accent) 20%, var(--ds-color-border-subtle));
 }
 
-.hubCta { display: flex; align-items: center; gap: 6px; color: var(--hub-accent); font-size:var(--ds-size-p9); letter-spacing: .1em; }
-.hubCtaText { overflow: hidden; flex: 1; text-overflow: ellipsis; white-space: nowrap; }
+.hubCta { display: flex; align-items: center; gap: var(--ds-space-8); min-height: 60px; margin-inline: calc(-1 * var(--ds-space-20)); padding: var(--ds-space-10) var(--ds-space-20); background: color-mix(in srgb, var(--hub-accent) 5%, transparent); color: var(--hub-accent); font-size: var(--ds-text-xs); letter-spacing: var(--ds-tracking-label); transition: background 160ms ease; }
+.hubCta > svg { flex: none; }
+.hubCtaText { flex: 1; min-width: 0; }
 .hubGlow .hubCtaText { text-shadow: 0 0 10px color-mix(in srgb, var(--hub-accent) 50%, transparent); }
 
 .chevronChip {
+  position: relative;
   display: grid;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   flex: none;
   place-items: center;
-  clip-path: polygon(6px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 2px 100%, 0 calc(100% - 2px), 0 6px);
-  background: color-mix(in srgb, var(--hub-accent) 14%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hub-accent) 55%, transparent);
+  clip-path: var(--ds-clip-field);
+  background: color-mix(in srgb, var(--hub-accent) 50%, var(--ds-color-border-default));
+}
+.chevronChip::before { content: ""; position: absolute; inset: 1px; clip-path: inherit; background: var(--ds-color-background-elevated); }
+.chevronChip > svg { position: relative; }
+
+@media (max-width: 420px) {
+  .hubFrame { padding: var(--ds-space-16) var(--ds-space-16) 0; }
+  .hubHeading { grid-template-columns: auto minmax(0, 1fr); gap: var(--ds-space-10); }
+  .rewardPill { grid-column: 2; justify-self: start; display: flex; align-items: center; gap: var(--ds-space-8); padding: var(--ds-space-6) var(--ds-space-8); }
+  .hubTitle { font-size: var(--ds-text-md); }
+  .hubCta { margin-inline: calc(-1 * var(--ds-space-16)); padding-inline: var(--ds-space-16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hubCard, .hubCta, .hubTrack i { transition: none; }
+  .hubCard:active { transform: none; }
+  .hubGlow { animation: none; }
 }
 
 .outcomeDots { display: flex; flex: none; gap: 4px; }
@@ -328,7 +355,7 @@
 }
 
 .blockedNote {
-  margin-top: 10px;
+  padding-block: var(--ds-space-12);
   color: var(--ds-color-text-muted);
   font-family: var(--ds-font-body);
   font-size:var(--ds-size-p11);

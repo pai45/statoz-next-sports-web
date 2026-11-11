@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import type { PlayerStanding } from "@/features/profile";
 
 import { nationalTeams, rivalRoster } from "@/mocks/leaderboard";
-import { scoreFor, scoreMetaFor } from "../scoring";
+import { rankByScore, scoreFor, scoreMetaFor } from "../scoring";
 import type {
   GameMode,
   LeaderboardEntry,
@@ -14,7 +14,6 @@ import type {
   MatchesBoard,
   TournamentScope,
 } from "../types";
-import type { Sport } from "@/domain/sports";
 
 /**
  * What a board shows, assembled from the fixed field and the live player.
@@ -30,7 +29,6 @@ export type BoardSelection = {
   board: MatchesBoard;
   scope: TournamentScope;
   mode: GameMode;
-  sport: Sport;
   leagueId: string;
   /** Omitted for guests so no local player is injected into a public board. */
   player?: PlayerStanding | null;
@@ -50,7 +48,6 @@ export function useBoardEntries({
   board,
   scope,
   mode,
-  sport,
   leagueId,
   player = null,
 }: BoardSelection): BoardState {
@@ -61,8 +58,7 @@ export function useBoardEntries({
     const meta = scoreMetaFor(type, isTeamBoard);
 
     if (isTeamBoard) {
-      const entries = nationalTeams.map((seed, index) => ({
-        rank: index + 1,
+      const entries: LeaderboardEntry[] = rankByScore(nationalTeams.map((seed) => ({
         name: seed.team.name,
         score: scoreFor(type, seed.score, scope, mode, `${leagueId}:${seed.team.name}`),
         movement: seed.movement,
@@ -71,7 +67,7 @@ export function useBoardEntries({
         isUser: personalized ? seed.isBacked ?? false : false,
         team: seed.team,
         xp: 0,
-      }));
+      })));
       return {
         entries,
         meta,
@@ -108,10 +104,7 @@ export function useBoardEntries({
       });
     }
 
-    field.sort((a, b) => b.xp - a.xp);
-
-    const entries: LeaderboardEntry[] = field.map((seed, index) => ({
-      rank: index + 1,
+    const entries: LeaderboardEntry[] = rankByScore(field.map((seed) => ({
       name: seed.name,
       score: scoreFor(type, seed.xp, scope, mode, `${leagueId}:${seed.name}`),
       movement: seed.movement,
@@ -120,8 +113,7 @@ export function useBoardEntries({
       isUser: seed.isUser,
       xp: seed.xp,
       team: null,
-      subtitle: `${seed.badge ?? sport.toUpperCase()} // BEST LEAGUE`,
-    }));
+    })));
 
     return {
       entries,
@@ -129,5 +121,5 @@ export function useBoardEntries({
       user: entries.find((entry) => entry.isUser) ?? null,
       isTeamBoard,
     };
-  }, [type, scope, mode, sport, leagueId, isTeamBoard, personalized, player]);
+  }, [type, scope, mode, leagueId, isTeamBoard, personalized, player]);
 }

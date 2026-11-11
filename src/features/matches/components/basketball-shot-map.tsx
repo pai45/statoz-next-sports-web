@@ -16,10 +16,14 @@ export function BasketballShotMap({ match, shots }: { match: SportMatch; shots: 
   const visible = useMemo(() => shots.filter((shot) => filter === "ALL" || filter === "3PT" && shot.points === 3 || filter === "HOME" && shot.side === "home" || filter === "AWAY" && shot.side === "away"), [filter, shots]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = visible.find((shot) => shot.id === selectedId) ?? visible[0];
-  if (!shots.length) return <EmptyPanel title="Scoring map unavailable" message="This package does not publish shot coordinates." />;
+  if (!shots.length) return <EmptyPanel title="Scoring map unavailable" message="Shot coordinates have not been published for this match." />;
   return <section className="spanFull">
     <SectionHeading label="SCORING MAP" />
     <FilterChips options={filters} selected={filter} onSelect={(value) => { setFilter(value); setSelectedId(null); }} label="Scoring map filter" />
+    <label className={styles.shotSelect}>Choose an attempt<select value={selected?.id ?? ""} onChange={event => setSelectedId(event.target.value)}>
+      {!visible.length && <option value="">No shots in this filter</option>}
+      {visible.map((shot, index) => <option key={shot.id} value={shot.id}>{index + 1}. {shot.player} · {shot.made ? "Made" : "Missed"} {shot.points}PT</option>)}
+    </select></label>
     <div className={styles.court}>
       <svg viewBox="0 0 50 47" preserveAspectRatio="none" aria-hidden="true">
         <path d="M17 0V19H33V0 M17 19A8 8 0 0 0 33 19 M22 5.25A3 3 0 0 0 28 5.25 M3 0V14 A23.75 23.75 0 0 0 47 14V0" />

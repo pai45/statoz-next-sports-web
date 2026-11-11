@@ -27,6 +27,11 @@ import { GuessPlayer } from "../guess-player";
 import { PenaltyShootout } from "../penalty-shootout";
 import { PitchDuel } from "../pitch-duel";
 import { SportQuiz } from "../quiz";
+import { DailyQuiz } from "../daily-quiz";
+import { WhoAreYa } from "../who-are-ya";
+import { FootballGrid } from "../grid";
+import { FootballConnections } from "../connections";
+import { HigherLower } from "../higher-lower";
 import { TennisRally } from "../tennis";
 import { sportForGame, type GameEntry } from "@/mocks/games";
 import type { GameId } from "../types";
@@ -74,6 +79,22 @@ const renderers: Partial<Record<GameId, ComponentType<GameLauncherProps>>> = {
   "basketball-quiz": SportQuiz,
   "tennis-quiz": SportQuiz,
   "motorsport-quiz": SportQuiz,
+  // Same screen for every sport; the id names the sport.
+  "football-daily-quiz": DailyQuiz,
+  "cricket-daily-quiz": DailyQuiz,
+  "basketball-daily-quiz": DailyQuiz,
+  "tennis-daily-quiz": DailyQuiz,
+  "motorsport-daily-quiz": DailyQuiz,
+  "football-who-are-ya": WhoAreYa,
+  "cricket-who-are-ya": WhoAreYa,
+  "basketball-who-are-ya": WhoAreYa,
+  "football-grid": FootballGrid,
+  "football-connections": FootballConnections,
+  "football-higher-lower": HigherLower,
+  "cricket-higher-lower": HigherLower,
+  "basketball-higher-lower": HigherLower,
+  "tennis-higher-lower": HigherLower,
+  "motorsport-higher-lower": HigherLower,
 };
 
 function GameSurface({ game, entry }: GameLauncherProps) {
@@ -92,6 +113,16 @@ function GameSurface({ game, entry }: GameLauncherProps) {
  */
 export function GameLauncher({ game, entry }: GameLauncherProps) {
   if (!isGameEnabled(game)) return <div role="status">This mode belongs to the other StatOz demo. <Link href="/">Return home</Link></div>;
+  // Dailies open without an account: the progress stays in this browser, and
+  // the result screen invites a log-in to keep the streak, rather than the
+  // door asking for one before the player has seen the game.
+  if (entry.guestPlayable) {
+    return (
+      <GameLandingAdProvider>
+        <AuthenticatedGameLauncher game={game} entry={entry} />
+      </GameLandingAdProvider>
+    );
+  }
   return (
     <AuthBoundary
       intent="play"

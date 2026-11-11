@@ -11,6 +11,7 @@ import type { MatchDetailData } from "../types";
 import { MatchLeaderboardTab } from "./match-leaderboard-tab";
 import { MatchScoreboard } from "./match-scoreboard";
 import styles from "./match-detail.module.css";
+import { matchTabFromHash } from "../stats-presentation";
 
 /**
  * The four match surfaces: the quizzes, the markets on the same fixture, the
@@ -34,9 +35,13 @@ const mainTabs: { id: MainTab; label: string }[] = [
 export function MatchTabsView({ match, detail }: { match: SportMatch; detail: MatchDetailData }) {
   const [activeTab, setActiveTab] = useState<MainTab>("predict");
   useEffect(() => {
-    if (window.location.hash !== "#picks") return;
-    const task = window.setTimeout(() => setActiveTab("picks"), 0);
-    return () => window.clearTimeout(task);
+    const sync = () => {
+      const tab = matchTabFromHash(window.location.hash);
+      if (tab) setActiveTab(tab);
+    };
+    const task = window.setTimeout(sync, 0);
+    window.addEventListener("hashchange", sync);
+    return () => { window.clearTimeout(task); window.removeEventListener("hashchange", sync); };
   }, []);
   const activeIndex = mainTabs.findIndex((tab) => tab.id === activeTab);
   return (

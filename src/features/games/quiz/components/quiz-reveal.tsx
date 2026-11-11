@@ -22,7 +22,7 @@ import { levelProgress } from "@/domain/progression";
 import { PackRevealBackdrop, RayBurst } from "@/features/packs";
 import { useCountUp, usePrefersReducedMotion } from "@/shared/hooks";
 
-import { entryCost, setCount } from "../constants";
+import { setCount } from "../constants";
 import { modeAccent, modeLabels } from "@/mocks/games/quiz";
 import type { AnswerResult, QuizMode, SetOutcome } from "../types";
 
@@ -56,6 +56,13 @@ export type QuizRevealProps = {
   xpBefore: number;
   outcome: SetOutcome;
   bestStreak: number;
+  /** Oz paid for stars earned for the first time on this run. */
+  coinsEarned: number;
+  /** What a replay of this set costs. */
+  replayCost: number;
+  /** Whether a set after this one exists to go straight on to. */
+  hasNextSet: boolean;
+  onNext: () => void;
   onReplay: () => void;
   onDone: () => void;
 };
@@ -68,6 +75,10 @@ export function QuizReveal({
   xpBefore,
   outcome,
   bestStreak,
+  coinsEarned,
+  replayCost,
+  hasNextSet,
+  onNext,
   onReplay,
   onDone,
 }: QuizRevealProps) {
@@ -107,7 +118,7 @@ export function QuizReveal({
               : `0 0 20px ${withAlpha(perfect ? gold : feedbackVar("success"), 0.55)}`,
           }}
         >
-          {perfect ? "FLAWLESS SET" : "SET CLEARED"}
+          {perfect ? "FLAWLESS SET" : correct === 0 ? "SET COMPLETE" : "SET CLEARED"}
         </h2>
 
         <div
@@ -136,7 +147,7 @@ export function QuizReveal({
             <span
               className="border px-1.75 py-0.75 font-display font-black leading-none"
               style={{
-                fontSize: typography.sizeRem.p9,
+                fontSize: typography.sizeRem.p11,
                 letterSpacing: "var(--ds-tracking-ultra)",
                 color: gold,
                 background: withAlpha(gold, 0.13),
@@ -152,6 +163,22 @@ export function QuizReveal({
 
         <div className={`${styles.revealIn} mt-6`} style={beat(0.35)}>
           <XpTotal xp={totalXp} />
+          {totalXp === 0 && outcome.bestBefore > 0 ? (
+            <p
+              className="mt-2 text-center font-display font-black leading-snug text-muted"
+              style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
+            >
+              BEAT YOUR BEST OF {outcome.bestBefore} TO EARN MORE XP
+            </p>
+          ) : null}
+          {coinsEarned > 0 ? (
+            <p
+              className="ds-tabular mt-2.5 text-center font-display font-black leading-none"
+              style={{ fontSize: typography.sizeRem.p17, letterSpacing: "var(--ds-tracking-ultra)", color: gold }}
+            >
+              +{coinsEarned} OZ FOR NEW STARS
+            </p>
+          ) : null}
         </div>
 
         {outcome.newlyCleared ? (
@@ -165,7 +192,7 @@ export function QuizReveal({
             <span
               className="font-display font-black leading-none"
               style={{
-                fontSize: typography.sizeRem.p10,
+                fontSize: typography.sizeRem.p11,
                 letterSpacing: "var(--ds-tracking-ultra)",
                 color: leveled ? gold : "var(--ds-color-text-muted)",
               }}
@@ -174,7 +201,7 @@ export function QuizReveal({
             </span>
             <span
               className="ds-tabular font-display font-black leading-none text-muted"
-              style={{ fontSize: typography.sizeRem.p9, letterSpacing: "var(--ds-tracking-wide)" }}
+              style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
             >
               {after.intoLevel} / {after.levelSpan} XP
             </span>
@@ -199,9 +226,9 @@ export function QuizReveal({
             glow
             fullWidth
             trailingIcon={<ArrowRightIcon size={18} />}
-            onClick={onDone}
+            onClick={hasNextSet ? onNext : onDone}
           >
-            CONTINUE TO SETS
+            {hasNextSet ? `NEXT SET · SET ${setNumber + 1}` : "BACK TO SETS"}
           </Button>
         </div>
 
@@ -214,8 +241,20 @@ export function QuizReveal({
               leadingIcon={<ReplayIcon size={18} />}
               onClick={onReplay}
             >
-              REPLAY FOR 3 STARS · {entryCost} COINS
+              REPLAY FOR 3 STARS · {replayCost} COINS
             </Button>
+          </div>
+        ) : null}
+
+        {hasNextSet ? (
+          <div className={`${styles.revealIn} mt-2.5 text-center`} style={beat(1)}>
+            <button
+              type="button"
+              onClick={onDone}
+              className="cursor-pointer px-3 py-3 font-display text-xs font-black tracking-wide text-muted hover:text-foreground"
+            >
+              ALL {modeLabels[mode]} SETS
+            </button>
           </div>
         ) : null}
       </div>
@@ -261,7 +300,7 @@ function StarAward({ stars, gained }: { stars: number; gained: number }) {
       <p
         className="mt-2.5 text-center font-display font-black leading-none"
         style={{
-          fontSize: typography.sizeRem.p9_5,
+          fontSize: typography.sizeRem.p11,
           letterSpacing: "var(--ds-tracking-ultra)",
           color: gained > 0 ? gold : "var(--ds-color-text-muted)",
         }}

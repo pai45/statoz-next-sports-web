@@ -1,11 +1,13 @@
 "use client";
 import { typography } from "@statoz/design-system/web/tokens/typography";
 
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   AccentPanel,
   accentVar,
+  ArrowRightIcon,
+  Button,
   feedbackVar,
   Glyph,
   PremiumIcon,
@@ -16,7 +18,7 @@ import {
 } from "@statoz/design-system/web";
 import type { Sport } from "@/domain/sports";
 
-import { questionsPerSet, setCount } from "../constants";
+import { entryCost, questionsPerSet, setCount, starCoinRewards } from "../constants";
 import { bandNames, firstSetOfBand, modeAccent, modeGlyph, modeLabels } from "@/mocks/games/quiz";
 import {
   completedCount,
@@ -66,11 +68,19 @@ export function QuizLadder({
 }: QuizLadderProps) {
   const accent = modeAccent(mode);
   const next = nextChallenge(progress, authoredSets);
-  const [chapter, setChapter] = useState<number | null>(null);
-  const selected = chapter ?? Math.floor((next - 1) / 10);
+  const nextChapter = useRef<HTMLElement>(null);
 
   const cleared = completedCount(progress);
   const stars = starCount(progress);
+  const ladderComplete = authoredSets > 0 && cleared >= authoredSets;
+
+  // Land on the chapter holding the next set, rather than at chapter one with
+  // the climb so far scrolled out of sight.
+  useEffect(() => {
+    if (next > 10) nextChapter.current?.scrollIntoView({ block: "center" });
+    // Only on arrival, not every time the record moves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-107.5 px-4 pb-7 pt-4 lg:max-w-240 lg:px-6">
@@ -79,21 +89,22 @@ export function QuizLadder({
         mode={mode}
         setNumber={next}
         progress={setProgressOf(progress, next)}
-        ladderComplete={authoredSets > 0 && cleared >= authoredSets}
+        ladderComplete={ladderComplete}
         awaitingContent={authoredSets === 0}
+        onPlay={authoredSets > 0 && !ladderComplete ? () => onOpenSet(next) : null}
       />
 
       <div className="mt-5 flex items-center gap-2">
         <h2
           className="flex-1 font-display font-black leading-none text-muted"
-          style={{ fontSize: typography.sizeRem.p10, letterSpacing: "var(--ds-tracking-ultra)" }}
+          style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
         >
           SET CHAPTERS
         </h2>
         <span
           className="ds-tabular font-display font-black leading-none"
           style={{
-            fontSize: typography.sizeRem.p9,
+            fontSize: typography.sizeRem.p11,
             letterSpacing: "var(--ds-tracking-ultra)",
             color: accent,
           }}
@@ -104,7 +115,7 @@ export function QuizLadder({
         <span
           className="ds-tabular font-display font-black leading-none"
           style={{
-            fontSize: typography.sizeRem.p9,
+            fontSize: typography.sizeRem.p11,
             letterSpacing: "var(--ds-tracking-label)",
             color: gold,
           }}
@@ -113,49 +124,21 @@ export function QuizLadder({
         </span>
       </div>
 
-      {/* Phone: one chapter at a time, chosen from a row of five tabs. */}
-      <div className="lg:hidden">
-        <div className="mt-2.5 grid grid-cols-5 gap-1.5">
-          {bandNames.map((name, index) => (
-            <ChapterTab
-              key={name}
-              name={name}
-              index={index}
-              selected={index === selected}
-              authored={index * 10 < authoredSets}
-              accent={accent}
-              onSelect={() => setChapter(index)}
-            />
-          ))}
-        </div>
-
-        <div className="mt-3.5 grid grid-cols-5 gap-2 max-[382px]:grid-cols-4">
-          {Array.from({ length: 10 }, (_, offset) => {
-            const setNumber = firstSetOfBand(selected) + offset;
-            return (
-              <QuizSetTile
-                key={setNumber}
-                mode={mode}
-                setNumber={setNumber}
-                progress={setProgressOf(progress, setNumber)}
-                state={visualStateFor(progress, setNumber, authoredSets)}
-                launching={launchingSet === setNumber}
-                onOpen={() => onOpenSet(setNumber)}
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Wide: the whole climb, chapter by chapter. */}
-      <div className="hidden lg:block">
+      {/* One path, chapter by chapter. The chapters are dividers on the climb
+          rather than tabs, so difficulty reads as one axis: the path you are
+          on, and how far up it you are. */}
+      <div>
         {bandNames.map((name, index) => (
-          <section key={name} className="mt-5 first:mt-3">
+          <section
+            key={name}
+            ref={index === Math.floor((next - 1) / 10) ? nextChapter : undefined}
+            className="mt-5 first:mt-3"
+          >
             <div className="flex items-baseline gap-2">
               <h3
                 className="font-display font-black leading-none"
                 style={{
-                  fontSize: typography.sizeRem.p9,
+                  fontSize: typography.sizeRem.p11,
                   letterSpacing: "var(--ds-tracking-ultra)",
                   color:
                     index * 10 < authoredSets
@@ -167,7 +150,7 @@ export function QuizLadder({
               </h3>
               <span
                 className="ds-tabular font-display font-black leading-none text-muted"
-                style={{ fontSize: typography.sizeRem.p9, letterSpacing: "var(--ds-tracking-label)" }}
+                style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-label)" }}
               >
                 {String(firstSetOfBand(index)).padStart(2, "0")}–
                 {firstSetOfBand(index) + 9}
@@ -179,7 +162,7 @@ export function QuizLadder({
               />
             </div>
 
-            <div className="mt-2 grid grid-cols-10 gap-2">
+            <div className="mt-2 grid grid-cols-5 gap-2 max-[382px]:grid-cols-4 lg:grid-cols-10">
               {Array.from({ length: 10 }, (_, offset) => {
                 const setNumber = firstSetOfBand(index) + offset;
                 return (
@@ -213,6 +196,7 @@ function NextChallenge({
   progress,
   ladderComplete,
   awaitingContent,
+  onPlay,
 }: {
   sport: Sport;
   mode: QuizMode;
@@ -220,6 +204,8 @@ function NextChallenge({
   progress: QuizSetProgress;
   ladderComplete: boolean;
   awaitingContent: boolean;
+  /** Starts the named set. Null when there is nothing to start. */
+  onPlay: (() => void) | null;
 }) {
   const accent = awaitingContent
     ? "var(--ds-color-text-muted)"
@@ -270,7 +256,7 @@ function NextChallenge({
           <h2
             className="flex-1 font-display font-black leading-none"
             style={{
-              fontSize: typography.sizeRem.p10,
+              fontSize: typography.sizeRem.p11,
               letterSpacing: "var(--ds-tracking-ultra)",
               color: accent,
             }}
@@ -280,7 +266,7 @@ function NextChallenge({
           <span
             className="shrink-0 border px-2 py-1 font-display font-black leading-none"
             style={{
-              fontSize: typography.sizeRem.p9,
+              fontSize: typography.sizeRem.p11,
               letterSpacing: "var(--ds-tracking-ultra)",
               color: accent,
               background: withAlpha(accent, 0.12),
@@ -298,73 +284,19 @@ function NextChallenge({
           {title}
         </p>
         <p className="mt-1.75 text-xs leading-snug text-muted">{body}</p>
+        {onPlay ? (
+          <div className="mt-3.5">
+            <Button accent={accent} glow fullWidth trailingIcon={<ArrowRightIcon size={18} />} onClick={onPlay}>
+              {progress.attempts > 0 ? `REPLAY SET ${setNumber}` : `PLAY SET ${setNumber}`}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </AccentPanel>
   );
 }
 
-/* ---- Chapters and the rule ------------------------------------------------ */
-
-function ChapterTab({
-  name,
-  index,
-  selected,
-  authored,
-  accent,
-  onSelect,
-}: {
-  name: string;
-  index: number;
-  selected: boolean;
-  /** A band nobody can reach yet stays legible but reads as inert. */
-  authored: boolean;
-  accent: string;
-  onSelect: () => void;
-}) {
-  const first = firstSetOfBand(index);
-  const ink = selected
-    ? accent
-    : authored
-      ? "var(--ds-color-text-muted)"
-      : withAlpha("var(--ds-color-text-muted)", 0.55);
-
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onSelect}
-      className="flex h-11.5 cursor-pointer flex-col items-center justify-center gap-0.5 border px-0.5 transition-colors duration-200"
-      style={{
-        background: selected
-          ? withAlpha(accent, 0.16)
-          : "var(--ds-color-background-secondary)",
-        borderColor: selected ? accent : "var(--ds-color-border-default)",
-      }}
-      aria-label={`${name}, sets ${first} through ${first + 9}`}
-    >
-      <span
-        className="w-full truncate font-display font-black leading-none"
-        style={{
-          fontSize: typography.sizeRem.p7_5,
-          letterSpacing: "var(--ds-tracking-tight)",
-          color: ink,
-        }}
-      >
-        {name}
-      </span>
-      <span
-        className="ds-tabular font-display font-black leading-none"
-        style={{
-          fontSize: typography.sizeRem.p8_5,
-          letterSpacing: "var(--ds-tracking-label)",
-          color: selected ? accent : withAlpha(ink, authored ? 0.75 : 0.45),
-        }}
-      >
-        {String(first).padStart(2, "0")}–{first + 9}
-      </span>
-    </button>
-  );
-}
+/* ---- The rule ------------------------------------------------------------- */
 
 function LadderRule({ accent }: { accent: string }) {
   return (
@@ -378,7 +310,9 @@ function LadderRule({ accent }: { accent: string }) {
       <LightbulbIcon size={18} style={{ color: accent }} />
       <p className="text-2xs leading-snug text-muted">
         Finish all {questionsPerSet} questions to unlock the next set — any score
-        clears it. Score {questionsPerSet}/{questionsPerSet} for 3 stars.
+        clears it. Score {questionsPerSet}/{questionsPerSet} for 3 stars. The first
+        play of every set is free; replays cost {entryCost} coins, and each new
+        star pays {starCoinRewards.join(" / ")} Oz.
       </p>
     </div>
   );

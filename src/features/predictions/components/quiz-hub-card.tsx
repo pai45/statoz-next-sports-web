@@ -82,10 +82,8 @@ export function QuizHubCard({
       ].filter(Boolean).join(" ")}
       style={{
         "--hub-accent": visual.accent,
-        "--home-color": match.home.color,
-        "--away-color": match.away.color,
       } as CSSProperties}
-      aria-label={`Open ${quiz.title}`}
+      aria-label={`${quiz.title}, ${quiz.questions.length} questions, ${visual.rewardText}. ${visual.blocked ? visual.blockedMessage : visual.ctaText}${visual.contest && !visual.contest.paid ? `. Entry ${visual.contest.fee} Oz` : ""}`}
       onClick={() =>
         visual.blocked
           ? onBlocked(visual.blockedMessage ?? "This quiz is not available right now.")
@@ -94,48 +92,51 @@ export function QuizHubCard({
     >
       <span className={styles.hubShadow} aria-hidden="true" />
       <span className={styles.hubFrame}>
-        <span className={[styles.indexPlate, styles.tabular].join(" ")}>
-          {String(index).padStart(2, "0")}
-        </span>
-
-        <span className="min-w-0 flex-1">
-          <span className="flex items-start gap-2">
-            <span className="min-w-0 flex-1">
-              <span className={`${styles.hubTag} block`}>{visual.tag}</span>
+        <span className={styles.hubHeading}>
+          <span className={[styles.indexPlate, styles.tabular].join(" ")} aria-hidden="true">
+            <span>{String(index).padStart(2, "0")}</span>
+          </span>
+            <span className={styles.hubIdentity}>
+              <span className={`${styles.hubTag} block`}>{visual.tag === "OBJECTIVE" ? visual.contest ? "SCORELINE CONTEST" : "FREE QUIZ" : visual.tag}</span>
               <span className={`${styles.hubTitle} block`}>{quiz.title}</span>
             </span>
             <span
               className={[styles.rewardPill, styles.tabular].join(" ")}
               style={{ "--pill-color": visual.rewardColor } as CSSProperties}
             >
-              {visual.rewardText}
+              <span className={styles.rewardLabel}>REWARD</span>
+              <span>{visual.rewardText}</span>
             </span>
           </span>
 
-          {quiz.subtitle ? <span className={`${styles.hubSubtitle} block truncate`}>{quiz.subtitle}</span> : null}
+          {quiz.subtitle ? <span className={`${styles.hubSubtitle} block`}>{quiz.subtitle}</span> : null}
 
-          {visual.contest ? <ContestStrip meta={visual.contest} /> : null}
+          <span className={styles.hubDetails}>
+            <span className={styles.questionCount}>{quiz.questions.length} QUESTIONS</span>
+            {visual.contest ? <ContestStrip meta={visual.contest} /> : <Chip label="FREE ENTRY" color="var(--ds-color-accent-cyan)" />}
+          </span>
 
-          <span
+          {prediction ? <span
             className={`${styles.hubTrack} block`}
             role="progressbar"
+            aria-label={prediction.status === "settled" ? "Correct predictions" : "Questions answered"}
             aria-valuenow={Math.round(visual.progress * 100)}
             aria-valuemin={0}
             aria-valuemax={100}
           >
             <i style={{ width: `${Math.min(100, Math.max(0, visual.progress * 100))}%`, "--track-accent": visual.progressAccent } as CSSProperties} />
-          </span>
+          </span> : null}
 
           <span className={`${styles.hubDivider} block`} aria-hidden="true" />
 
           <span className={styles.hubCta}>
-            <CtaIcon size={14} aria-hidden="true" />
-            <span className={`${styles.hubCtaText} ${styles.tabular}`}>{visual.ctaText}</span>
+            <CtaIcon size={16} aria-hidden="true" />
+            <span className={`${styles.hubCtaText} ${styles.tabular}`}>{visual.tag === "OBJECTIVE" ? "START PREDICTING" : visual.ctaText}</span>
             {visual.outcomes ? (
               <OutcomeDots outcomes={visual.outcomes} />
             ) : visual.showChevron ? (
               <span className={styles.chevronChip} aria-hidden="true">
-                <ArrowRightIcon size={15} />
+                <ArrowRightIcon size={18} />
               </span>
             ) : null}
           </span>
@@ -143,7 +144,6 @@ export function QuizHubCard({
           {visual.blocked && visual.blockedMessage ? (
             <span className={`${styles.blockedNote} block`}>{visual.blockedMessage}</span>
           ) : null}
-        </span>
       </span>
     </button>
   );
@@ -201,13 +201,13 @@ function ContestStrip({ meta }: { meta: ContestMeta }) {
   const entry = meta.paid
     ? <Chip icon={CheckIcon} label="ENTRY PAID" color="var(--ds-color-accent-lime)" />
     : meta.affordable
-      ? <Chip icon={PaidIcon} label={`-${meta.fee} OZ ENTRY`} color="var(--ds-color-accent-cyan)" />
+      ? <Chip icon={PaidIcon} label={`${meta.fee} OZ ENTRY`} color="var(--ds-color-accent-cyan)" />
       : <Chip icon={LockIcon} label={`NEED ${meta.fee} OZ`} color="var(--ds-color-text-muted)" />;
 
   return (
     <span className={styles.contestStrip}>
       {entry}
-      <Chip icon={TrophyIcon} label={scorelineContestPrizes.join(" · ")} color="var(--ds-color-accent-gold)" />
+      <Chip icon={TrophyIcon} label={`PRIZES ${scorelineContestPrizes.map(prize => prize.toLocaleString("en-US")).join(" · ")} OZ`} color="var(--ds-color-accent-gold)" />
     </span>
   );
 }

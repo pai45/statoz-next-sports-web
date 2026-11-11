@@ -1,11 +1,11 @@
 .page {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+  position: relative;
   display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   justify-content: center;
   overflow: hidden;
-  padding-top: env(safe-area-inset-top);
   background: var(--ds-gradient-app-background);
 }
 
@@ -13,7 +13,7 @@
   display: flex;
   width: 100%;
   max-width: 640px;
-  height: 100%;
+  flex: 1;
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
@@ -194,7 +194,9 @@
 .outcomeButton:focus-visible,
 .quizBoardTabs button:focus-visible { outline: 2px solid var(--ds-color-accent-cyan); outline-offset: -2px; }
 
-.tabPanel { min-height: 0; flex: 1; }
+.tabPanel { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.tabPanel:has([data-match-stats]) { display: flex; flex-direction: column; }
+.tabPanel:has([data-match-stats])>[data-match-stats] { flex: 1; }
 
 .scrollPanel,
 .scoreboardScroll {

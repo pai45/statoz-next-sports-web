@@ -7,7 +7,8 @@ import type {
   LeagueStatGroup,
   TeamLeagueHubSnapshot,
 } from "@/domain/leagues";
-import type { SportTeam } from "@/domain/matches";
+import { crestForSport, type SportTeam } from "@/domain/matches";
+import type { Sport } from "@/domain/sports";
 import { cardGamePortraitFor } from "@/features/packs/data/portrait-assets.card-game.generated";
 
 import cricketPackage from "../snapshots/card-game/cricket-league-stats.json";
@@ -53,7 +54,8 @@ const cyan = "var(--ds-color-accent-cyan)";
 const gold = "var(--ds-color-accent-gold)";
 const racing = "var(--ds-color-accent-racing)";
 
-function team(raw: RawTeam): SportTeam {
+/** A league's team; given its sport, it wears that sport's crest. */
+function team(raw: RawTeam, sport?: Sport): SportTeam {
   return {
     id: String(raw.id),
     name: raw.displayName ?? raw.name ?? raw.shortDisplayName ?? String(raw.id),
@@ -62,6 +64,7 @@ function team(raw: RawTeam): SportTeam {
     secondaryColor: normalizeColor(raw.alternateColor, "#0f172b"),
     badgeTextColor: "#ffffff",
     secondaryTextColor: "#ffffff",
+    ...(sport ? { crest: crestForSport(sport) } : {}),
   };
 }
 
@@ -175,7 +178,7 @@ function footballHubs(): TeamLeagueHubSnapshot[] {
     teamStats: Record<string, Record<string, unknown>>;
   }>).map((league) => {
     const id = league.slug === "eng.1" ? "epl" : "laliga";
-    const teams = new Map(league.teams.map((entry) => [String(entry.id), team(entry)]));
+    const teams = new Map(league.teams.map((entry) => [String(entry.id), team(entry, "football")]));
     const columns: LeagueStandingColumn[] = [
       { id: "p", label: "P" }, { id: "w", label: "W" }, { id: "d", label: "D" },
       { id: "l", label: "L" }, { id: "f", label: "F" }, { id: "a", label: "A" },
@@ -183,7 +186,7 @@ function footballHubs(): TeamLeagueHubSnapshot[] {
     ];
     const rows = league.standings.map((row) => ({
       rank: row.rank,
-      competitor: teams.get(String(row.teamId)) ?? team({ id: row.teamId }),
+      competitor: teams.get(String(row.teamId)) ?? team({ id: row.teamId }, "football"),
       metrics: {
         p: row.stats.gamesPlayed?.[1] ?? "—", w: row.stats.wins?.[1] ?? "—",
         d: row.stats.ties?.[1] ?? "—", l: row.stats.losses?.[1] ?? "—",
@@ -215,7 +218,7 @@ function cricketHub(): TeamLeagueHubSnapshot {
     teams: RawTeam[]; standings: Array<Record<string, number | string>>;
     leaders: RawLeaderBoard[]; athletes: Record<string, RawAthlete>; teamStats: Record<string, Record<string, unknown>>;
   };
-  const teams = new Map(league.teams.map((entry) => [String(entry.id), team(entry)]));
+  const teams = new Map(league.teams.map((entry) => [String(entry.id), team(entry, "cricket")]));
   return {
     kind: "team", id: "ipl", sport: "cricket", name: league.name,
     shortCode: league.abbreviation, accent: gold, seasonLabel: `IPL ${league.seasonYear}`,
@@ -225,7 +228,7 @@ function cricketHub(): TeamLeagueHubSnapshot {
       { id: "nrr", label: "NRR" }, { id: "pts", label: "PTS", emphasis: true },
     ],
     groups: [{ id: "all", label: league.name, shortLabel: "TABLE", rows: league.standings.map((row) => ({
-      rank: Number(row.rank), competitor: teams.get(String(row.teamId)) ?? team({ id: String(row.teamId) }),
+      rank: Number(row.rank), competitor: teams.get(String(row.teamId)) ?? team({ id: String(row.teamId) }, "cricket"),
       metrics: { p: row.matchesPlayed, w: row.matchesWon, l: row.matchesLost, nrr: Number(row.netrr) >= 0 ? `+${row.netrr}` : row.netrr, pts: row.matchPoints },
       zone: Number(row.rank) === 4 ? { label: "PLAYOFFS", color: gold } : undefined,
     })) }],
@@ -240,7 +243,7 @@ function nbaHub(): TeamLeagueHubSnapshot {
     conferences: Array<{ label: string; rows: Array<Record<string, number | string>> }>;
     leaders: RawLeaderBoard[]; athletes: Record<string, RawAthlete>; teamStats: Record<string, Record<string, unknown>>;
   };
-  const teams = new Map(league.teams.map((entry) => [String(entry.id), team(entry)]));
+  const teams = new Map(league.teams.map((entry) => [String(entry.id), team(entry, "basketball")]));
   return {
     kind: "team", id: "nba", sport: "basketball", name: league.name,
     shortCode: league.abbreviation, accent: gold, seasonLabel: league.season,
@@ -253,7 +256,7 @@ function nbaHub(): TeamLeagueHubSnapshot {
       id: conferenceIndex === 0 ? "east" : "west", label: conference.label,
       shortLabel: conferenceIndex === 0 ? "EAST" : "WEST",
       rows: conference.rows.map((row) => ({
-        rank: Number(row.rank), competitor: teams.get(String(row.teamId)) ?? team({ id: String(row.teamId) }),
+        rank: Number(row.rank), competitor: teams.get(String(row.teamId)) ?? team({ id: String(row.teamId) }, "basketball"),
         metrics: { w: row.wins, l: row.losses, pct: Number(row.winPercent).toFixed(3).replace(/^0/, ""), gb: row["gamesBehind.display"], l10: row["record.lasttengames"], strk: row["streak.display"] },
         zone: Number(row.rank) === 6 ? { label: "PLAYOFFS", color: gold } : Number(row.rank) === 10 ? { label: "PLAY-IN", color: cyan } : undefined,
       })),
@@ -356,7 +359,7 @@ function profileFromLeague(leagueId: string, rawLeague: unknown, playerId: strin
     nationality: athlete.citizenship,
     age: athlete.age,
     image: cardGamePortraitFor(sport, name),
-    team: team(rawTeam),
+    team: team(rawTeam, sport),
     stats: statRows(athlete.stats),
   };
 }

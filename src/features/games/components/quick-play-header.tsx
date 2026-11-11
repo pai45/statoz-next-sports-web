@@ -29,7 +29,7 @@ export function QuickPlayHeader({ count }: QuickPlayHeaderProps) {
           background: `color-mix(in srgb, ${CYAN} 10%, transparent)`,
         }}
       >
-        {count} FREE GAME{count === 1 ? "" : "S"}
+        {count} GAME{count === 1 ? "" : "S"}
       </span>
     </div>
   );

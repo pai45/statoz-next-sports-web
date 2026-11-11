@@ -1,4 +1,4 @@
-import { questionsPerSet, setCount, twoStarScore } from "../constants";
+import { entryCost, questionsPerSet, setCount, starCoinRewards, twoStarScore } from "../constants";
 import type {
   QuizMode,
   QuizModeProgress,
@@ -49,6 +49,27 @@ export function setProgressOf(
   setNumber: number,
 ): QuizSetProgress {
   return progress.sets[setNumber] ?? noSet;
+}
+
+/** What opening a set costs: nothing the first time, the entry fee after. */
+export function entryCostFor(set: QuizSetProgress): number {
+  return set.attempts === 0 ? 0 : entryCost;
+}
+
+/**
+ * Oz owed for the stars a run added, one payment per star index. The ids are
+ * stable per sport, mode, set and star, so settling them is idempotent.
+ */
+export function starRewardsFor(
+  key: string,
+  outcome: SetOutcome,
+): { id: string; star: number; coins: number }[] {
+  const before = outcome.stars - outcome.starsGained;
+  const rewards: { id: string; star: number; coins: number }[] = [];
+  for (let star = before + 1; star <= outcome.stars; star += 1) {
+    rewards.push({ id: `quiz-star:${key}:${star}`, star, coins: starCoinRewards[star - 1] ?? 0 });
+  }
+  return rewards;
 }
 
 /** Set one is always open; every other set waits on the one before it. */

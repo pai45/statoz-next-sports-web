@@ -25,7 +25,7 @@ export default async function MatchDetailPage({
   const detail = matchDetailFor(match);
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-match-detail>
       <div className={styles.frame}>
         <MatchSummaryHeader match={match} />
         <MatchTabsView match={match} detail={detail} />

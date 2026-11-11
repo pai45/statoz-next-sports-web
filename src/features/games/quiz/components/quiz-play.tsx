@@ -219,7 +219,7 @@ export function QuizPlay({
         <span
           className="mr-2 shrink-0 border px-2 py-1 font-display font-black leading-none"
           style={{
-            fontSize: typography.sizeRem.p9,
+            fontSize: typography.sizeRem.p11,
             letterSpacing: "var(--ds-tracking-ultra)",
             color: accent,
             background: withAlpha(accent, 0.12),
@@ -275,7 +275,7 @@ export function QuizPlay({
             <p
               className="font-display font-black leading-none"
               style={{
-                fontSize: typography.sizeRem.p8_5,
+                fontSize: typography.sizeRem.p11,
                 letterSpacing: "var(--ds-tracking-ultra)",
                 color: scanning ? accentVar("cyan") : accent,
               }}
@@ -447,7 +447,7 @@ function HudMetric({
         </span>
         <span
           className="truncate font-display font-black leading-none text-muted"
-          style={{ fontSize: typography.sizeRem.p7_5, letterSpacing: "var(--ds-tracking-wide)" }}
+          style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
         >
           {label}
         </span>
@@ -615,9 +615,11 @@ function ExitDialog({
           EXIT QUIZ?
         </h2>
         <p className="mt-3 text-xs leading-snug text-muted">
+          {/* Nothing from an unfinished run is saved: the set records only
+              when all ten are answered, and XP follows the best finished score. */}
           {banked > 0
-            ? `Your +${banked} XP is banked, but SET ${setNumber} will not clear and the entry fee will not be refunded.`
-            : `SET ${setNumber} will not clear and the entry fee will not be refunded.`}
+            ? `This run's +${banked} XP will not be saved and SET ${setNumber} will not clear. Any replay fee already paid is not refunded.`
+            : `SET ${setNumber} will not clear. Any replay fee already paid is not refunded.`}
         </p>
         <div className="mt-5 flex justify-end gap-3">
           <button

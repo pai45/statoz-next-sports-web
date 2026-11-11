@@ -1,43 +1,84 @@
 "use client";
-/* eslint-disable react/jsx-no-comment-textnodes */
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { ArrowLeftIcon, NoDataState, PersonSearchIcon, SearchField } from "@statoz/design-system/games";
+import { accentVar } from "@statoz/design-system/web";
+import { sportModuleFor } from "@/domain/sports";
+import { useAuthSession, useRequireAuth } from "@/features/auth";
+import { RivalDossierOverlay } from "@/features/profile/components/rival-dossier";
+import { usePlayerStanding, type PlayerStanding } from "@/features/profile/state/player-standing";
+import { isPro, rivalSeedByName } from "@/mocks/leaderboard";
+import { searchEntries } from "../scoring";
+import { boardContext, boardTitle, leaderboardHref, searchBoardSelection } from "../selection";
+import { useBoardEntries } from "../state/use-board-entries";
+import type { LeaderboardEntry } from "../types";
+import { Standings } from "./standings";
+import styles from "./board.module.css";
 
-import { AccentPanel, ArrowLeftIcon, NoDataState, PersonSearchIcon, SearchField, SearchIcon, SignalOffIcon } from "@statoz/design-system/web";
-import { isPro, rivalRoster } from "@/mocks/leaderboard";
-import { RivalDossierOverlay, usePlayerStanding } from "@/features/profile";
+type OpenRival = { name: string; rank: number; xp: number; pro: boolean };
 
-type Result = (typeof rivalRoster)[number] & { rank: number };
-
+/** FIND A PLAYER: searches the board you came from, keeping each player's rank and score. */
 export function LeaderboardSearchScreen() {
-  const params = useSearchParams();
-  const back = params.get("returnTo")?.startsWith("/leaderboard") ? params.get("returnTo")! : "/leaderboard";
-  const player = usePlayerStanding();
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState<Result | null>(null);
-  const input = useRef<HTMLInputElement>(null);
-  const normalized = query.trim().toLocaleLowerCase().replace(/\s+/g, " ");
-  const results = useMemo(() => searchRivals(normalized, player.displayName), [normalized, player.displayName]);
-  return <section className="flex min-h-0 flex-1 flex-col">
-    <header className="shrink-0 border-b border-line-muted bg-background/95"><div className="mx-auto flex min-h-16 w-full max-w-4xl items-center px-2 sm:px-4"><Link href={back} aria-label="Back to leaderboard" className="grid size-11 place-items-center text-cyan"><ArrowLeftIcon size={22} /></Link><span className="mr-2 font-display text-xl font-black text-cyan">/</span><div><h1 className="font-display text-lg font-black tracking-wide">PLAYER SEARCH</h1><p className="mt-1 font-display text-2xs font-extrabold tracking-ultra text-muted">// COMPLETE LOCAL FIELD</p></div></div></header>
-    <main className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-      <SearchField ref={input} label="Search leaderboard players" value={query} onChange={(event) => setQuery(event.target.value)} onClear={() => { setQuery(""); input.current?.focus(); }} autoFocus enterKeyHint="search" placeholder="Search player name" />
-      <div className="mt-5">
-        {normalized.length < 2 ? <NoDataState icon={PersonSearchIcon} spark={SearchIcon} title={normalized ? "Add one more signal" : "Find a rival"} message="Enter at least two characters. Every word in the query must match the player's name." className="min-h-56" /> : results.length === 0 ? <NoDataState icon={SignalOffIcon} spark={SearchIcon} title="No rival found" message={`No player matches “${query.trim()}”.`} className="min-h-56" /> : <div className="grid gap-2" aria-live="polite">{results.map((result) => <button key={result.name} type="button" onClick={() => setOpen(result)} className="text-left"><AccentPanel accent="var(--ds-color-accent-cyan)"><span className="flex min-h-16 items-center gap-3 px-4"><b className="ds-tabular text-cyan">#{result.rank}</b><span className="min-w-0 flex-1"><strong className="block truncate font-display text-sm font-black">{result.name}</strong><small className="text-muted">{result.base.toLocaleString("en-US")} XP</small></span><small className="font-display text-2xs font-black tracking-wide text-muted">OPEN DOSSIER</small></span></AccentPanel></button>)}</div>}
-      </div>
-    </main>
-    {open ? <RivalDossierOverlay name={open.name} rank={open.rank} xp={open.base} pro={isPro(open)} userRank={open.rank} onClose={() => { setOpen(null); requestAnimationFrame(() => input.current?.focus()); }} /> : null}
-  </section>;
+  const session = useAuthSession();
+  return session.status === "authenticated" ? <PersonalizedSearch /> : <BoardPlayerSearch />;
 }
 
-export function searchRivals(query: string, selfName: string): Result[] {
-  if (query.length < 2) return [];
-  const words = query.split(" ").filter(Boolean);
-  return rivalRoster.map((seed, index) => ({ ...seed, rank: index + 1 })).filter((seed) => seed.name.toLocaleLowerCase() !== selfName.trim().toLocaleLowerCase() && words.every((word) => seed.name.toLocaleLowerCase().includes(word))).sort((left, right) => {
-    const leftName = left.name.toLocaleLowerCase(); const rightName = right.name.toLocaleLowerCase();
-    const score = (name: string) => name === query ? 0 : name.startsWith(query) ? 1 : 2;
-    return score(leftName) - score(rightName) || leftName.localeCompare(rightName);
+function PersonalizedSearch() {
+  const player = usePlayerStanding();
+  return <BoardPlayerSearch player={player} authenticated />;
+}
+
+function BoardPlayerSearch({ player = null, authenticated = false }: { player?: PlayerStanding | null; authenticated?: boolean }) {
+  const params = useSearchParams();
+  const serialized = params.toString();
+  const selection = useMemo(() => searchBoardSelection(new URLSearchParams(serialized)), [serialized]);
+  const { entries, meta, user, isTeamBoard } = useBoardEntries({
+    type: selection.type, board: selection.board, scope: selection.scope, mode: selection.mode, leagueId: selection.league, player,
   });
+  const [query, setQuery] = useState("");
+  const [rival, setRival] = useState<OpenRival | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const requireAuth = useRequireAuth();
+  const router = useRouter();
+  const accent = accentVar(sportModuleFor(selection.sport).accent);
+  const context = `${boardContext(selection)} · ${boardTitle(selection)}`;
+  const results = searchEntries(entries, query);
+  const noun = isTeamBoard ? "team" : "player";
+
+  function open(entry: LeaderboardEntry) {
+    if (!authenticated) {
+      requireAuth({ intent: "compare profiles", message: "Log in to compare your standing with other players.", returnTo: leaderboardHref(selection, true) });
+      return;
+    }
+    if (entry.isUser) { router.push("/profile"); return; }
+    const seed = rivalSeedByName(entry.name);
+    if (!seed) return;
+    opener.current = document.activeElement as HTMLElement | null;
+    setRival({ name: seed.name, rank: entry.rank, xp: seed.base, pro: isPro(seed) });
+  }
+
+  return <section className={styles.searchPage} style={{ "--leaderboard-accent": accent } as CSSProperties}>
+    <header className={styles.searchHeader}>
+      <Link href={leaderboardHref(selection)} aria-label="Back to leaderboard" className={styles.searchBack}><ArrowLeftIcon size={20} /></Link>
+      <div><span className={styles.eyebrow}>{isTeamBoard ? "TEAM" : "PLAYER"} DIRECTORY <span aria-hidden="true">{"//"}</span></span><h1>FIND A {noun.toUpperCase()}</h1><p>{context}</p></div>
+    </header>
+    <SearchField ref={input} label={`Search leaderboard ${noun}s`} placeholder={`Search ${noun} name`} value={query} accent={accent}
+      onChange={(event) => setQuery(event.target.value)} onClear={() => { setQuery(""); input.current?.focus(); }} autoFocus enterKeyHint="search" />
+    <div className={styles.searchResults}>
+      {query.trim().length < 2
+        ? <NoDataState icon={PersonSearchIcon} accent={accent} title="Find your rival" message="Enter at least two characters to search this board. Results keep their rank and score." className="min-h-56" />
+        : results.length === 0
+          ? <NoDataState icon={PersonSearchIcon} accent={accent} title={`No ${noun} found`} message={`No ${noun} on this board matches “${query.trim()}”.`} className="min-h-56" />
+          : <>
+            <p className={styles.searchCount} role="status">{results.length} {results.length === 1 ? noun : `${noun}s`} found on {context}</p>
+            <Standings entries={results} meta={meta} scope={selection.scope} teamBoard={isTeamBoard}
+              avatarSrc={player?.avatarSrc} frameColor={player?.frameColor} onOpen={isTeamBoard ? undefined : open} />
+          </>}
+    </div>
+    {rival && authenticated ? <RivalDossierOverlay name={rival.name} rank={rival.rank} xp={rival.xp} pro={rival.pro} userRank={user?.rank ?? rival.rank}
+      onClose={() => { setRival(null); requestAnimationFrame(() => opener.current?.focus()); }} /> : null}
+  </section>;
 }

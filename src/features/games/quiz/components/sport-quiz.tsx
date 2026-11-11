@@ -1,7 +1,7 @@
 "use client";
 import { typography } from "@statoz/design-system/web/tokens/typography";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   accentVar,
@@ -11,7 +11,7 @@ import {
 } from "@statoz/design-system/web";
 import { totalTrackXp } from "@/domain/progression";
 import { sportModuleFor } from "@/domain/sports";
-import { spendCoins, useEconomy } from "@/features/economy";
+import { settleCoinReward, spendCoins, useEconomy } from "@/features/economy";
 import { collectionFromIds } from "@/features/packs";
 import { formatInt } from "@/shared/utils";
 
@@ -20,14 +20,20 @@ import { GameLandingAd } from "../../shared/components/game-landing-ad";
 import { useGameReturn } from "../../shared/hooks/use-game-return";
 import { sportForGame } from "@/mocks/games";
 import { useGameCareer } from "../../state/game-career";
-import { entryCost } from "../constants";
+import { entryCost, modeRewards, quizModes, setCount } from "../constants";
 import { modeLabels } from "@/mocks/games/quiz";
 import {
   authoredSetCount,
   buildQuizSet,
   ensureLoaded,
 } from "../state/question-bank";
-import { modeProgressOf } from "../state/ladder";
+import {
+  entryCostFor,
+  isSetUnlocked,
+  modeProgressOf,
+  setProgressOf,
+  starRewardsFor,
+} from "../state/ladder";
 import {
   progressForSport,
   recordSetResult,
@@ -70,7 +76,21 @@ type View =
       xpBefore: number;
       outcome: SetOutcome;
       bestStreak: number;
+      /** Oz paid for stars earned for the first time on this run. */
+      coinsEarned: number;
     };
+
+/** `?mode=easy&set=7` from a hub link, read once the screen is in the browser. */
+function readLaunchParams(): { mode: QuizMode | null; set: number | null } {
+  if (typeof window === "undefined") return { mode: null, set: null };
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get("mode");
+  const set = Number(params.get("set"));
+  return {
+    mode: quizModes.includes(mode as QuizMode) ? (mode as QuizMode) : null,
+    set: Number.isInteger(set) && set >= 1 && set <= setCount ? set : null,
+  };
+}
 
 export function SportQuiz({ game }: GameLauncherProps) {
   const sport = sportForGame(game);
@@ -120,17 +140,70 @@ export function SportQuiz({ game }: GameLauncherProps) {
     setView({ name: "play", mode, setNumber, questions });
   }
 
+  /**
+   * Opens a set: straight into play when it is free (its first play), via the
+   * briefing when it costs, so the price is always stated before it is taken.
+   */
+  function openSet(mode: QuizMode, setNumber: number) {
+    const ladder = modeProgressOf(progress, mode);
+    if (!isSetUnlocked(ladder, setNumber)) return;
+    if (entryCostFor(setProgressOf(ladder, setNumber)) === 0) {
+      startSet(mode, setNumber);
+      return;
+    }
+    // The briefing sits over the ladder, so show the ladder under it even when
+    // the request came from the reveal.
+    setView((current) => (current.name === "ladder" && current.mode === mode ? current : { name: "ladder", mode }));
+    setBriefing({ mode, setNumber });
+  }
+
   function confirmEntry() {
     if (!briefing) return;
-    const paid = spendCoins({
-      id: `quiz-${sport}-${briefing.mode}-${briefing.setNumber}`,
-      coins: entryCost,
-      title: `${sportModuleFor(sport).label.toUpperCase()} QUIZ ENTRY`,
-      subtitle: `${modeLabels[briefing.mode]} SET ${briefing.setNumber}`,
-    });
-    if (!paid.ok) return;
+    const cost = entryCostFor(setProgressOf(modeProgressOf(progress, briefing.mode), briefing.setNumber));
+    if (cost > 0) {
+      const paid = spendCoins({
+        id: `quiz-${sport}-${briefing.mode}-${briefing.setNumber}`,
+        coins: cost,
+        title: `${sportModuleFor(sport).label.toUpperCase()} QUIZ REPLAY`,
+        subtitle: `${modeLabels[briefing.mode]} SET ${briefing.setNumber}`,
+      });
+      if (!paid.ok) return;
+    }
     startSet(briefing.mode, briefing.setNumber);
   }
+
+  /** Pays each star earned for the first time on this set, once ever. */
+  function payStars(mode: QuizMode, setNumber: number, outcome: SetOutcome): number {
+    let coins = 0;
+    for (const reward of starRewardsFor(`${sport}:${mode}:${setNumber}`, outcome)) {
+      if (reward.coins <= 0) continue;
+      const before = economy.settledRewardIds.includes(reward.id);
+      settleCoinReward({
+        id: reward.id,
+        coins: reward.coins,
+        title: `${sportModuleFor(sport).label.toUpperCase()} QUIZ STAR`,
+        subtitle: `${modeLabels[mode]} SET ${setNumber} · STAR ${reward.star}`,
+      });
+      if (!before) coins += reward.coins;
+    }
+    return coins;
+  }
+
+  // A hub link can name a path (`?mode=`) and a set (`?set=`): open that
+  // ladder, and start the set if it is open, so CONTINUE is one tap.
+  const launched = useRef(false);
+  useEffect(() => {
+    if (!hydrated || launched.current) return;
+    launched.current = true;
+    const { mode, set } = readLaunchParams();
+    if (!mode) return;
+    void (async () => {
+      await openMode(mode);
+      if (set) openSet(mode, set);
+    })();
+    // Runs once, the first time the record is readable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   if (view.name === "play") {
     return (
@@ -141,19 +214,24 @@ export function SportQuiz({ game }: GameLauncherProps) {
         setNumber={view.setNumber}
         questions={view.questions}
         onExit={() => setView({ name: "ladder", mode: view.mode })}
-        onFinish={({ results, correct, earnedXp, bestStreak }) => {
+        onFinish={({ results, correct, bestStreak }) => {
           // Recorded before the reveal reads it, so the outcome the summary
           // plays is the one that was actually saved.
           const outcome = recordSetResult(sport, view.mode, view.setNumber, correct);
+          const coinsEarned = payStars(view.mode, view.setNumber, outcome);
+          // Quiz XP is held as each set's best score, so a replay only banks
+          // the answers it adds over that best. Show what was really banked.
+          const bankedXp = Math.max(0, correct - outcome.bestBefore) * modeRewards[view.mode];
           setView({
             name: "reveal",
             mode: view.mode,
             setNumber: view.setNumber,
             results,
-            totalXp: earnedXp,
+            totalXp: bankedXp,
             xpBefore: totalXp,
             outcome,
             bestStreak,
+            coinsEarned,
           });
         }}
       />
@@ -170,7 +248,14 @@ export function SportQuiz({ game }: GameLauncherProps) {
         xpBefore={view.xpBefore}
         outcome={view.outcome}
         bestStreak={view.bestStreak}
-        onReplay={() => setBriefing({ mode: view.mode, setNumber: view.setNumber })}
+        coinsEarned={view.coinsEarned}
+        replayCost={entryCost}
+        hasNextSet={view.setNumber < Math.min(setCount, authored[view.mode] ?? setCount)}
+        onNext={() => openSet(view.mode, view.setNumber + 1)}
+        onReplay={() => {
+          setView({ name: "ladder", mode: view.mode });
+          setBriefing({ mode: view.mode, setNumber: view.setNumber });
+        }}
         onDone={() => setView({ name: "ladder", mode: view.mode })}
       />
     );
@@ -203,9 +288,7 @@ export function SportQuiz({ game }: GameLauncherProps) {
           progress={modeProgressOf(progress, ladderMode)}
           authoredSets={authored[ladderMode] ?? 0}
           launchingSet={briefing?.setNumber ?? null}
-          onOpenSet={(setNumber) =>
-            setBriefing({ mode: ladderMode, setNumber })
-          }
+          onOpenSet={(setNumber) => openSet(ladderMode, setNumber)}
         />
       ) : (
         <QuizLobby
@@ -287,7 +370,7 @@ function QuizHeader({
         </h1>
         <p
           className="mt-1 truncate font-display font-black leading-none text-muted"
-          style={{ fontSize: typography.sizeRem.p8, letterSpacing: "var(--ds-tracking-ultra)" }}
+          style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
         >
           {subtitle}
         </p>
@@ -321,7 +404,7 @@ function Loading() {
     <div className="grid flex-1 place-items-center">
       <p
         className="font-display font-black leading-none text-muted"
-        style={{ fontSize: typography.sizeRem.p10, letterSpacing: "var(--ds-tracking-ultra)" }}
+        style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
       >
         LOADING...
       </p>

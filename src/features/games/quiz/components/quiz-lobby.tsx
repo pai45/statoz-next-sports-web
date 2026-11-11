@@ -71,9 +71,9 @@ export function QuizLobby({ sport, progress, onPickMode }: QuizLobbyProps) {
 
       <h2
         className="mt-5 font-display font-black leading-none text-muted"
-        style={{ fontSize: typography.sizeRem.p10, letterSpacing: "var(--ds-tracking-ultra)" }}
+        style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
       >
-        CHOOSE A CATEGORY
+        CHOOSE A PATH
       </h2>
 
       <div className="mt-2.5 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -122,7 +122,7 @@ function ArenaHero({
         <span
           className="min-w-0 flex-1 truncate font-display font-black leading-none"
           style={{
-            fontSize: typography.sizeRem.p7_5,
+            fontSize: typography.sizeRem.p11,
             letterSpacing: "var(--ds-tracking-ultra)",
             color: cyan,
           }}
@@ -136,7 +136,7 @@ function ArenaHero({
         />
         <span
           className="ds-tabular shrink-0 font-display font-black leading-none text-muted"
-          style={{ fontSize: typography.sizeRem.p7_5, letterSpacing: "var(--ds-tracking-ultra)" }}
+          style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
         >
           0{quizModes.length} TRACKS
         </span>
@@ -164,7 +164,7 @@ function ArenaHero({
           </p>
           <p
             className="mt-1.75 truncate font-display font-black leading-none text-muted"
-            style={{ fontSize: typography.sizeRem.p7, letterSpacing: "var(--ds-tracking-wide)" }}
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
           >
             CLEAR SETS // CLIMB THE LADDER
           </p>
@@ -185,13 +185,13 @@ function ArenaHero({
           </span>
           <span
             className="ds-tabular mt-0.5 font-display font-black leading-none text-muted"
-            style={{ fontSize: typography.sizeRem.p9, letterSpacing: "var(--ds-tracking-label)" }}
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-label)" }}
           >
             / {total}
           </span>
           <span
             className="mt-1.25 text-right font-display font-black leading-tight text-muted"
-            style={{ fontSize: typography.sizeRem.p6, letterSpacing: "var(--ds-tracking-wide)" }}
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
           >
             SETS CLEARED
           </span>
@@ -202,14 +202,14 @@ function ArenaHero({
         <div className="flex items-baseline">
           <span
             className="font-display font-black leading-none text-muted"
-            style={{ fontSize: typography.sizeRem.p7_5, letterSpacing: "var(--ds-tracking-ultra)" }}
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
           >
             TOTAL MASTERY
           </span>
           <span
             className="ds-tabular ml-auto font-display font-black leading-none"
             style={{
-              fontSize: typography.sizeRem.p8_5,
+              fontSize: typography.sizeRem.p11,
               letterSpacing: "var(--ds-tracking-label)",
               color: cyan,
             }}
@@ -250,7 +250,7 @@ function ArenaHero({
           <p
             className="font-display font-black leading-none"
             style={{
-              fontSize: typography.sizeRem.p7,
+              fontSize: typography.sizeRem.p11,
               letterSpacing: "var(--ds-tracking-ultra)",
               color: cyan,
             }}
@@ -258,7 +258,7 @@ function ArenaHero({
             MISSION BRIEF
           </p>
           <p className="mt-1 text-2xs leading-snug text-muted">
-            Clear sets to advance each category ladder.
+            Clear sets to climb each path. First plays are free.
           </p>
         </div>
         <QuestionCount />
@@ -297,7 +297,7 @@ function SportPlate({ sport }: { sport: Sport }) {
       />
       <span
         className="absolute bottom-2 left-2.25 font-display font-black leading-none text-muted"
-        style={{ fontSize: typography.sizeRem.p6_5, letterSpacing: "var(--ds-tracking-ultra)" }}
+        style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
       >
         TRIVIA
       </span>
@@ -333,7 +333,7 @@ function QuestionCount() {
         </span>
         <span
           className="font-display font-black leading-none text-muted"
-          style={{ fontSize: typography.sizeRem.p5_8, letterSpacing: "var(--ds-tracking-wide)" }}
+          style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
         >
           Q / RUN
         </span>
@@ -374,7 +374,7 @@ function ModeTile({
       type="button"
       onClick={onPick}
       className={`${styles.pressable} block h-full w-full cursor-pointer text-left`}
-      aria-label={`${modeLabels[mode]} category, ${cleared} of ${setCount} sets cleared, ${stars} stars, ${complete ? "complete" : `next set ${nextSet}`}`}
+      aria-label={`${modeLabels[mode]} path, ${cleared} of ${setCount} sets cleared, ${stars} stars, ${complete ? "complete" : `next set ${nextSet}`}`}
     >
       <AccentPanel accent={accent} className="h-full">
         <div className="flex h-full flex-col p-3">
@@ -392,7 +392,7 @@ function ModeTile({
             <span
               className="flex-1 text-right font-display font-black leading-tight"
               style={{
-                fontSize: typography.sizeRem.p7,
+                fontSize: typography.sizeRem.p11,
                 letterSpacing: "var(--ds-tracking-label)",
                 color: gold,
               }}
@@ -409,14 +409,14 @@ function ModeTile({
           </p>
           <p
             className="mt-1 truncate font-display font-black leading-none text-muted"
-            style={{ fontSize: typography.sizeRem.p7_5, letterSpacing: "var(--ds-tracking-wide)" }}
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
           >
             {modeBlurb(mode, sport)}
           </p>
           <p
             className="mt-0.75 truncate font-display font-black leading-none"
             style={{
-              fontSize: typography.sizeRem.p7_5,
+              fontSize: typography.sizeRem.p11,
               letterSpacing: "var(--ds-tracking-wide)",
               color: complete ? feedbackVar("success") : withAlpha(accent, 0.9),
             }}
@@ -435,7 +435,7 @@ function ModeTile({
               <StarIcon size={11} style={{ color: gold }} />
               <span
                 className="ds-tabular font-display font-black leading-none"
-                style={{ fontSize: typography.sizeRem.p8_5, color: gold }}
+                style={{ fontSize: typography.sizeRem.p11, color: gold }}
               >
                 {stars}
               </span>

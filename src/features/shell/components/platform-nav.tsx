@@ -8,6 +8,7 @@ import {
   LockIcon,
   NavRail,
   ProfileIcon,
+  QuizIcon,
   ShopIcon,
   TrophyIcon,
   type NavRailItem,
@@ -24,7 +25,8 @@ export type PlatformNavProps = {
 
 const icons: Record<NavDestinationId, React.ReactNode> = {
   sports: <FootballIcon size={20} />,
-  quiz: <TrophyIcon size={20} />,
+  // Its own glyph: TOP keeps the trophy, so the two tabs no longer look alike.
+  quiz: <QuizIcon size={20} />,
   shop: <ShopIcon size={20} />,
   leaderboard: <TrophyIcon size={20} />,
   profile: <ProfileIcon size={20} />,

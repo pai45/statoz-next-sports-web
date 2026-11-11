@@ -41,6 +41,8 @@ export {
   useIsHydrated,
   resetProfileIdentity,
   saveProfileSetup,
+  saveAvatar,
+  saveBanner,
   useProfileIdentity,
 } from "./state/profile-identity";
 

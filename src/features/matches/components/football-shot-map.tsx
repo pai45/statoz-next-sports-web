@@ -65,6 +65,12 @@ export function FootballShotMap({ match, shots }: { match: SportMatch; shots: Ma
         className={styles.filters}
       />
 
+      <label className={styles.shotSelect}>Choose an attempt
+        <select value={selectedId ?? ""} onChange={event => setSelectedId(event.target.value || null)}>
+          <option value="">Select a shot</option>
+          {visible.map((shot, index) => <option key={shot.id} value={shot.id}>{index + 1}. {shot.player} · {shotLabel(shot.outcome)} · {shot.minute}′</option>)}
+        </select>
+      </label>
       <div className={styles.pitch} aria-label={`${visible.length} tracked shots on a full pitch`}>
         <svg viewBox="0 0 105 68" preserveAspectRatio="none" aria-hidden="true">
           <rect x="0.5" y="0.5" width="104" height="67" className={styles.pitchLine} />

@@ -6,6 +6,7 @@ import { NoDataState, SignalOffIcon, accentVar, type IconProps } from "@statoz/d
 import type { MatchDetailStat, MatchIntel, MatchPulse, SportMatch } from "@/domain/matches";
 
 import styles from "./match-stats.module.css";
+import { comparisonShares, statText } from "../stats-presentation";
 
 /**
  * Shared furniture for the per-sport STATS views, built on the pick market's
@@ -169,21 +170,18 @@ export function StatComparisonRow({
   selected?: boolean;
   onSelect?: () => void;
 }) {
-  const total = stat.homeValue + stat.awayValue;
-  const share = total <= 0 ? 0.5 : stat.homeValue / total;
-  const homeLeads = share >= 0.5;
-  const homeFlex = Math.min(995, Math.max(5, Math.round(share * 1000)));
+  const shares = comparisonShares(stat.homeValue, stat.awayValue);
 
   return (
-    <StatsRow accent={homeLeads ? homeColor : awayColor} selected={selected} onSelect={onSelect}>
+    <StatsRow selected={selected} onSelect={onSelect}>
       <span className={styles.comparisonHead}>
-        <b style={{ color: homeLeads ? homeColor : "var(--ds-color-text-default)" }}>{stat.home}</b>
+        <b>{statText(stat.home)}</b>
         <small>{stat.label.toUpperCase()}</small>
-        <b style={{ color: homeLeads ? "var(--ds-color-text-default)" : awayColor }}>{stat.away}</b>
+        <b>{statText(stat.away)}</b>
       </span>
-      <span className={styles.splitBar}>
-        <i style={{ flexGrow: homeFlex, background: homeColor }} />
-        <i style={{ flexGrow: 1000 - homeFlex, background: awayColor }} />
+      <span className={styles.splitBar} aria-hidden="true" data-missing={!shares || undefined}>
+        <i style={{ width: `${(shares?.home ?? 0) * 100}%`, backgroundColor: homeColor }} />
+        <i data-away style={{ width: `${(shares?.away ?? 0) * 100}%`, backgroundColor: awayColor }} />
       </span>
     </StatsRow>
   );

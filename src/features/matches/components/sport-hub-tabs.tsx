@@ -1,82 +1,37 @@
 "use client";
 
-import {
-  accentVar,
-  FlameIcon,
-  MoreIcon,
-  SearchIcon,
-  UnderlineTabs,
-  type UnderlineTab,
-} from "@statoz/design-system/web";
-import { sportModuleFor, sportOrder, sportTabColors, type Sport } from "@/domain/sports";
+import { accentVar, FilterChips, MoreIcon, SearchIcon } from "@statoz/design-system/web";
+import { sportModuleFor, sportOrder, type Sport } from "@/domain/sports";
+import styles from "./sport-hub-tabs.module.css";
 
-import { SportIcon } from "./sport-icon";
-
-/** `null` is the Trending destination; a sport narrows the feed to that sport. */
+/** null shows the editorial feed; a sport narrows the fixtures. */
 export type SportHubSelection = Sport | null;
-
 export type SportHubTabsProps = {
   selected: SportHubSelection;
   onSelect: (selection: SportHubSelection) => void;
   onMore?: () => void;
   onSearch?: () => void;
 };
+const labelFor = (sport: Sport) => sport === "basketball" ? "Basketball" : sportModuleFor(sport).label;
 
-/** Motorsport stays in All Sports rather than crowding the shortcuts. */
-const shortcuts: Sport[] = sportOrder.filter((sport) => sport === "football" || sport === "cricket" || sport === "basketball");
-
-/** Browse strip above the feed: Trending, four sports, then All Sports. */
-export function SportHubTabs({
-  selected,
-  onSelect,
-  onMore,
-  onSearch,
-}: SportHubTabsProps) {
-  const tabs: UnderlineTab[] = [
-    { id: "trending", label: "TRENDING", icon: <FlameIcon size={21} /> },
-    ...shortcuts.map((sport) => ({
-      id: sport,
-      label: sportModuleFor(sport).label.toUpperCase(),
-      icon: <SportIcon sport={sport} size={21} />,
-    })),
-    {
-      id: "all",
-      label: "ALL SPORTS",
-      icon: <MoreIcon size={21} />,
-      action: onMore,
-    },
-  ];
-
-  const shortcutIndex = selected === null ? -1 : shortcuts.indexOf(selected);
-  const activeIndex = selected === null ? 0 : shortcutIndex >= 0 ? shortcutIndex + 1 : -1;
-  const accent = accentVar(selected ? sportModuleFor(selected).accent : "cyan");
-  const shortcutColors = sportTabColors.slice(0, shortcuts.length).map(accentVar);
-
+/** The dashboard's outlined sport chips, with every Sports destination available. */
+export function SportHubTabs({ selected, onSelect, onMore, onSearch }: SportHubTabsProps) {
   return (
-    <UnderlineTabs
-      label="Browse by sport"
-      tabs={tabs}
-      activeIndex={activeIndex}
-      accent={accent}
-      iconColors={[
-        accentVar("cyan"),
-        ...shortcutColors,
-        accentVar("cyan"),
-      ]}
-      onChange={(index) => onSelect(index === 0 ? null : shortcuts[index - 1])}
-      trailing={
-        onSearch ? (
-          <button
-            type="button"
-            onClick={onSearch}
-            aria-label="Search teams and leagues"
-            title="Search teams and leagues"
-            className="grid size-11 place-items-center text-accent"
-          >
-            <SearchIcon size={22} />
-          </button>
-        ) : undefined
-      }
-    />
+    <div className={styles.bar}>
+      <div className={styles.inner}>
+        <FilterChips
+          label="Browse by sport"
+          options={["Trending", ...sportOrder.map(labelFor)]}
+          selected={selected ? labelFor(selected) : "Trending"}
+          accent={accentVar(selected ? sportModuleFor(selected).accent : "cyan")}
+          onSelect={label => onSelect(sportOrder.find(sport => labelFor(sport) === label) ?? null)}
+          className={styles.chips}
+        />
+        <div className={styles.tools}>
+          {onMore && <button type="button" onClick={onMore} aria-label="Explore all sports" title="Explore all sports"><MoreIcon size={21} /></button>}
+          {onSearch && <button type="button" onClick={onSearch} aria-label="Search teams and leagues" title="Search teams and leagues"><SearchIcon size={21} /></button>}
+        </div>
+      </div>
+    </div>
   );
 }

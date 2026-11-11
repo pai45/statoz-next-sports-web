@@ -21,6 +21,12 @@ const activityLabels = {
   pitchDuel: "PITCH DUEL COMPLETE",
   penaltyShootout: "SHOOTOUT COMPLETE",
   guessPlayer: "PLAYER GUESSED",
+  dailyQuiz: "DAILY QUIZ DONE",
+  bingo: "BINGO GRID COMPLETE",
+  whoAreYa: "MYSTERY PLAYER DONE",
+  grid: "GRID COMPLETE",
+  higherLower: "CHAIN COMPLETE",
+  connections: "CONNECTIONS DONE",
 } as const;
 
 export function StreakCelebrationHost() {

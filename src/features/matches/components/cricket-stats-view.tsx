@@ -26,13 +26,14 @@ import {
 } from "./match-stats-shell";
 import { MatchTraceChart } from "./match-trace-chart";
 import styles from "./match-stats.module.css";
+import { MatchStatsLayout, ReportPanel } from "./match-stats-layout";
 
 /**
  * The cricket report: the chase, the two worms side by side, the required rate
  * against the actual one, the card, the ball-by-ball feed, and the squads.
  */
 
-const tabs = ["OVERVIEW", "RACE", "SCORECARD", "MATCH FEED"];
+const tabs = ["OVERVIEW", "RUN PROGRESSION", "SCORECARD", "MATCH FEED"];
 
 export function CricketStatsView({
   match,
@@ -44,11 +45,9 @@ export function CricketStatsView({
   const [tab, setTab] = useState(tabs[0]);
 
   return (
-    <div className={styles.statsView}>
-      <FilterChips options={tabs} selected={tab} onSelect={setTab} label="Match report sections" />
-      <div className={styles.statsScroll}>
+    <MatchStatsLayout match={match} sections={tabs} selected={tab} onSelect={setTab}>
         {tab === "OVERVIEW" ? <Overview match={match} scoreboard={scoreboard} /> : null}
-        {tab === "RACE" ? (
+        {tab === "RUN PROGRESSION" ? (
           scoreboard.trace ? (
             <div className={styles.stack}>
               <div className="spanFull">
@@ -59,15 +58,14 @@ export function CricketStatsView({
           ) : (
             <EmptyPanel
               icon={ShowChartIcon}
-              title="Race data unavailable"
+              title="Run progression unavailable"
               message="Both innings need published scoring samples for this race."
             />
           )
         ) : null}
         {tab === "SCORECARD" ? <Scorecard match={match} scoreboard={scoreboard} /> : null}
         {tab === "MATCH FEED" ? <Feed match={match} scoreboard={scoreboard} /> : null}
-      </div>
-    </div>
+    </MatchStatsLayout>
   );
 }
 
@@ -75,6 +73,13 @@ function Overview({ match, scoreboard }: { match: SportMatch; scoreboard: MatchD
   const [held, setHeld] = useState<string | null>(null);
   return (
     <div className={styles.stack}>
+      <ReportPanel title="INNINGS AT A GLANCE" full>
+        {scoreboard.innings?.length ? <div className={styles.inningsSummary}>{scoreboard.innings.map(innings => (
+          <div key={`${innings.side}-${innings.team}`} className={styles.inningsSnapshot}>
+            <span>{innings.team}</span><strong>{innings.score}</strong><small>{innings.overs} · Run rate {innings.runRate}</small>
+          </div>
+        ))}</div> : <EmptyPanel title="Innings scores unavailable" message="Innings totals have not been published for this match." />}
+      </ReportPanel>
       <section className={styles.tight}>
         <SectionHeading label="MATCH INTEL" />
         <MatchIntelPanel match={match} intel={scoreboard.intel} />
@@ -123,19 +128,7 @@ function Scorecard({ match, scoreboard }: { match: SportMatch; scoreboard: Match
   return (
     <div className={styles.stack}>
       {innings.length > 1 ? (
-        <div className={`${styles.inningsTabs} spanFull`}>
-          {innings.map((entry, index) => (
-            <button
-              key={entry.team}
-              type="button"
-              className={`${styles.inningsTab} ${index === selected ? styles.inningsTabActive : ""}`}
-              aria-pressed={index === selected}
-              onClick={() => setSelected(index)}
-            >
-              {entry.team}
-            </button>
-          ))}
-        </div>
+        <FilterChips options={innings.map((entry, index) => `${entry.team} · Innings ${index + 1}`)} selected={`${card.team} · Innings ${selected + 1}`} onSelect={label => setSelected(innings.findIndex((entry, index) => `${entry.team} · Innings ${index + 1}` === label))} label="Scorecard innings" className={styles.fullPanel} />
       ) : null}
 
       <section className={`${styles.tight} spanFull`}>
@@ -158,7 +151,8 @@ function Scorecard({ match, scoreboard }: { match: SportMatch; scoreboard: Match
 
       <section className={`${styles.tight} spanFull`}>
         <SectionHeading label="BATTING" />
-        <table className={styles.card}>
+        <div className={styles.tableScroll} role="region" aria-label="Batting scorecard" tabIndex={0}><table className={styles.card}>
+          <caption className="sr-only">{card.team} batting scorecard</caption>
           <thead>
             <tr>
               <th>BATTER</th>
@@ -186,12 +180,13 @@ function Scorecard({ match, scoreboard }: { match: SportMatch; scoreboard: Match
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </section>
 
       <section className={`${styles.tight} spanFull`}>
         <SectionHeading label="BOWLING" />
-        <table className={styles.card}>
+        <div className={styles.tableScroll} role="region" aria-label="Bowling scorecard" tabIndex={0}><table className={styles.card}>
+          <caption className="sr-only">{card.team} bowling scorecard</caption>
           <thead>
             <tr>
               <th>BOWLER</th>
@@ -214,7 +209,7 @@ function Scorecard({ match, scoreboard }: { match: SportMatch; scoreboard: Match
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </section>
 
       <section className={styles.tight}>

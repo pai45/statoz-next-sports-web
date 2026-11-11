@@ -1,0 +1,25 @@
+.frame {
+  --platform-nav-height: 0px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  min-width: 0;
+  background: var(--ds-color-background-primary);
+}
+.main { display: flex; flex: 1; flex-direction: column; min-width: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (max-width: 767px), (max-width: 1023px) and (orientation: landscape) and (max-height: 540px) {
+  .frame { --platform-bottom-bar-height: 4.5rem; --platform-nav-height: var(--platform-bottom-bar-height); }
+  .main { padding-bottom: calc(var(--platform-nav-height) + env(safe-area-inset-bottom, 0px)); }
+  .main :is(a, button, input, select, textarea, [tabindex]) { scroll-margin-bottom: calc(var(--platform-nav-height) + env(safe-area-inset-bottom, 0px) + var(--ds-space-12)); }
+}
+/* Compact match screens fill the space left by the actual command bar,
+   including its two-row phone layout, instead of covering the viewport. */
+@media (max-width: 1023px) {
+  .frame:has([data-match-detail]) { height: 100dvh; overflow: hidden; }
+  .main:has([data-match-detail]) { min-height: 0; }
+}
+.skip { position: fixed; top: var(--ds-space-8); left: var(--ds-space-16); z-index: 100; transform: translateY(-200%); padding: var(--ds-space-12); background: var(--ds-color-accent-cyan); color: var(--ds-color-text-inverse); }
+.skip:focus { transform: none; }
+.main :is(a, button, input, select, textarea, [tabindex]) { scroll-margin-top: 8rem; }
+@media (max-width: 540px) { .main :is(a, button, input, select, textarea, [tabindex]) { scroll-margin-top: 9rem; } }

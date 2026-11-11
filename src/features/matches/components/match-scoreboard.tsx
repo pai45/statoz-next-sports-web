@@ -10,12 +10,13 @@ import { BasketballStatsView } from "./basketball-stats-view";
 import { CricketStatsView } from "./cricket-stats-view";
 import { FootballStatsView } from "./football-stats-view";
 import { MotorsportStatsView } from "./motorsport-stats-view";
+import { TennisStatsView } from "./tennis-stats-view";
+import { MatchStatsLayout, ReportPanel } from "./match-stats-layout";
 import { CommentaryView, TimelineList } from "./match-report-parts";
 import { MatchPitchView } from "./match-pitch-view";
 import {
   EmptyPanel,
   MatchIntelPanel,
-  MatchPulseHeader,
   SectionHeading,
   StatComparisonRow,
   StatsRow,
@@ -39,10 +40,19 @@ export function MatchScoreboard({
   match: SportMatch;
   scoreboard: MatchDetailScoreboard;
 }) {
+  if (match.status === "scheduled") return <MatchStatsLayout match={match} sections={["PRE-MATCH"]} selected="PRE-MATCH" onSelect={() => {}}>
+    <div className={styles.stack}>
+      <ReportPanel title="BEFORE THE FIRST PLAY" full><EmptyPanel title="Pre-match report" message="Statistics, scoring and player totals will appear after the event begins." /></ReportPanel>
+      <ReportPanel title="MATCH DETAILS" full><dl className={styles.intelFacts}>
+        <div><dt>Competition</dt><dd>{match.leagueLabel}</dd></div><div><dt>Venue</dt><dd>{scoreboard.intel.venue || "—"}</dd></div>
+      </dl></ReportPanel>
+    </div>
+  </MatchStatsLayout>;
   if (match.sport === "football") return <FootballStatsView match={match} scoreboard={scoreboard} />;
   if (match.sport === "basketball") return <BasketballStatsView match={match} scoreboard={scoreboard} />;
   if (match.sport === "cricket") return <CricketStatsView match={match} scoreboard={scoreboard} />;
-  if (match.sport === "motorsport" && scoreboard.race) return <MotorsportStatsView report={scoreboard.race} />;
+  if (match.sport === "tennis") return <TennisStatsView match={match} scoreboard={scoreboard} />;
+  if (match.sport === "motorsport" && scoreboard.race) return <MotorsportStatsView match={match} report={scoreboard.race} />;
   return <GenericStatsView match={match} scoreboard={scoreboard} />;
 }
 
@@ -58,9 +68,7 @@ function GenericStatsView({
   const [tab, setTab] = useState(first);
 
   return (
-    <div className={styles.statsView}>
-      <FilterChips options={tabs} selected={tab} onSelect={setTab} label="Match report sections" />
-      <div className={styles.statsScroll}>
+    <MatchStatsLayout match={match} sections={tabs} selected={tab} onSelect={setTab}>
         {tab === first ? <Facts match={match} scoreboard={scoreboard} /> : null}
         {tab === "LINEUP" ? (
           match.sport === "motorsport" ? (
@@ -70,8 +78,7 @@ function GenericStatsView({
           )
         ) : null}
         {tab === "COMMENTARY" ? <CommentaryView commentary={scoreboard.commentary} /> : null}
-      </div>
-    </div>
+    </MatchStatsLayout>
   );
 }
 
@@ -81,14 +88,6 @@ function Facts({ match, scoreboard }: { match: SportMatch; scoreboard: MatchDeta
 
   return (
     <div className={styles.stack}>
-      <div className="spanFull">
-        <MatchPulseHeader
-          match={match}
-          title={`${match.home.name} vs ${match.away.name}`}
-          pulse={scoreboard.pulse}
-        />
-      </div>
-
       <section className={styles.tight}>
         <SectionHeading label="MATCH INTEL" />
         <MatchIntelPanel match={match} intel={scoreboard.intel} />

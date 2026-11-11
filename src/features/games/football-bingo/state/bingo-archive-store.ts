@@ -2,6 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 
+import { recordStreakActivity } from "@/features/streaks/activity";
+
 import { contentVersion, startingLifelines } from "../constants";
 import { hydrateArchive } from "../engine/archive";
 import type { BingoArchive, BingoProgress } from "../types";
@@ -182,11 +184,17 @@ export function openSeason(now: Date): BingoArchive {
 export function saveProgress(dayKey: string, progress: BingoProgress): void {
   const current = storedArchive();
   if (current === null) return;
+  const wasComplete = current.progressByDay[dayKey]?.completed === true;
   write({
     ...current,
     contentVersion,
     progressByDay: { ...current.progressByDay, [dayKey]: progress },
   });
+  // A finished grid keeps the daily streak alive, once, on the day it belongs to.
+  if (progress.completed && !wasComplete) {
+    const [year, month, day] = dayKey.split("-").map(Number);
+    if (year && month && day) recordStreakActivity("bingo", new Date(year, month - 1, day, 12));
+  }
 }
 
 /** Clears the season. Used by the demo reset, not by the game. */

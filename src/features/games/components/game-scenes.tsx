@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import type { StatozGameId } from "@statoz/design-system/web";
 import { publicAsset } from "@/shared/config";
 import type { GameId, GameSceneId } from "../types";
 import { discoveryFamily } from "./game-discovery.generated";
@@ -39,9 +40,32 @@ export function GameScene(props: GameSceneProps) {
   if(props.game === "retro-circuit") return <div className={styles.scene} aria-hidden="true" data-discovery-game="retro-circuit" style={{opacity:props.opacity ?? 1}}><Image src={publicAsset("/assets/games/retro-circuit.png")} alt="" fill sizes="(min-width: 1024px) 240px, 50vw" unoptimized className={styles.layerImage} /></div>;
   return <CatalogGameScene {...props} />;
 }
+/**
+ * The catalogue game whose artwork a web-only id borrows. Daily quizzes wear
+ * their sport quiz's scene; the retro previews wear their arcade cousin's.
+ */
+export function artGameFor(game: GameId): StatozGameId {
+  if (game.endsWith("-daily-quiz")) return game.replace("-daily-quiz", "-quiz") as StatozGameId;
+  if (game === "football-who-are-ya") return "guess-player";
+  if (game === "football-grid") return "football-bingo";
+  if (game === "football-connections") return "football-chess";
+  if (game === "football-higher-lower") return "pitch-duel";
+  if (game === "cricket-higher-lower") return "final-over";
+  if (game === "basketball-higher-lower") return "hoop-duel";
+  if (game === "tennis-higher-lower") return "tennis-rally";
+  if (game === "motorsport-higher-lower") return "grand-prix-dash";
+  if (game === "cricket-who-are-ya") return "cricket-guess-player";
+  if (game === "basketball-who-are-ya") return "basketball-guess-player";
+  if (game === "retro-innings") return "final-over";
+  if (game === "retro-hoops") return "hoop-duel";
+  if (game === "retro-circuit") return "grand-prix-dash";
+  if (game === "retro-football") return "pitch-duel";
+  return game as StatozGameId;
+}
+
 function CatalogGameScene({ game, opacity = 1, animate = true, locked = false, phase }: GameSceneProps) {
   const root = useRef<HTMLDivElement>(null);
-  const scene = discoveryFamily.games[game === "retro-innings" ? "final-over" : game === "retro-hoops" ? "hoop-duel" : game];
+  const scene = discoveryFamily.games[artGameFor(game)];
 
   useEffect(() => {
     const element = root.current;

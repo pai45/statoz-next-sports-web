@@ -276,7 +276,7 @@ export function bestStreak(snapshot: StreakSnapshot, category: StreakCategory): 
 function categoriesFor(activity: StreakActivity): StreakCategory[] {
   if (activity === "pitchDuel") return ["overall", "games", "pitchDuel"];
   if (activity === "penaltyShootout") return ["overall", "games", "penaltyShootout"];
-  if (activity === "guessPlayer") return ["overall", "games"];
+  if (activity === "guessPlayer" || activity === "dailyQuiz" || activity === "bingo" || activity === "whoAreYa" || activity === "grid" || activity === "higherLower" || activity === "connections") return ["overall", "games"];
   return ["overall", activity];
 }
 

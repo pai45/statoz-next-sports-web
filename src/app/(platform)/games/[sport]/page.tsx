@@ -2,10 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { sportModules, sportOrder, type Sport } from "@/domain/sports";
-import { AdSlot } from "@/features/ads";
-import { SportGameDeck, SportGamesHub } from "@/features/games";
+import { QuizHub } from "@/features/games/hub";
 
-/** Every sport is known up front, so all five decks prerender. */
+/**
+ * The older address for a sport's games. It renders the same page as
+ * `/quiz/<sport>` rather than redirecting, because the static export has no
+ * server to send a redirect, and it points search engines at the new address.
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return sportOrder.map((sport) => ({ sport }));
 }
@@ -14,27 +19,19 @@ function resolve(sport: string): Sport | null {
   return sport in sportModules ? (sport as Sport) : null;
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/games/[sport]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/games/[sport]">): Promise<Metadata> {
   const sport = resolve((await params).sport);
   if (!sport) return { title: "Games" };
-
   const label = sportModules[sport].label;
   return {
-    title: `${label} games`,
-    description: `Every StatOz game you can play on ${label.toLowerCase()}.`,
+    title: `${label} quiz`,
+    description: `Today's ${label.toLowerCase()} daily quiz and games.`,
+    alternates: { canonical: `/quiz/${sport}` },
   };
 }
 
 export default async function SportGamesPage({ params }: PageProps<"/games/[sport]">) {
   const sport = resolve((await params).sport);
   if (!sport) notFound();
-
-  return (
-    <SportGamesHub sport={sport}>
-      <AdSlot placement="games-catalog" />
-      <SportGameDeck sport={sport} />
-    </SportGamesHub>
-  );
+  return <QuizHub sport={sport} />;
 }

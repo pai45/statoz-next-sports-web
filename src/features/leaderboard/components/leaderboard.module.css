@@ -34,25 +34,6 @@
   }
 }
 
-/**
- * Changing board, scope or mode replaces the whole body rather than mutating
- * it, so it arrives the way the app's `AnimatedSwitcher` brings it in.
- */
-.boardIn {
-  animation: board-in 280ms cubic-bezier(0.33, 1, 0.68, 1) backwards;
-}
-
-@keyframes board-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.6rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 /* ---- Interactive chrome -------------------------------------------------- */
 
 /**
@@ -71,18 +52,3 @@
 .pressable:active {
   transform: translateY(0);
 }
-
-/** The mode strip scrolls sideways on a phone; its scrollbar would be chrome. */
-.railScroll {
-  scrollbar-width: none;
-}
-
-.railScroll::-webkit-scrollbar {
-  display: none;
-}
-
-.leagueDial { display: flex; gap: var(--ds-space-2); overflow-x: auto; padding: var(--ds-space-2) var(--ds-space-4); scroll-snap-type: x mandatory; scrollbar-width: none; cursor: grab; touch-action: pan-x; border-bottom: 1px solid var(--ds-color-border-subtle); }
-.leagueDial:active { cursor: grabbing; }
-.leagueDial::-webkit-scrollbar { display: none; }
-.leagueDial button { flex: 0 0 auto; min-width: 132px; min-height: 38px; padding: 0 var(--ds-space-3); scroll-snap-align: center; border: 1px solid var(--ds-color-border-muted); background: transparent; color: var(--ds-color-text-muted); font:var(--ds-weight-black) var(--ds-text-2xs) var(--ds-font-display); letter-spacing: var(--ds-tracking-wide); }
-.leagueDial button[aria-selected="true"] { border-color: var(--leaderboard-accent,var(--ds-color-accent-cyan)); color: var(--leaderboard-accent,var(--ds-color-accent-cyan)); background: color-mix(in srgb,var(--leaderboard-accent,var(--ds-color-accent-cyan)) 10%,transparent); }

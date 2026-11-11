@@ -280,18 +280,25 @@
   gap: 12px;
 }
 
+/* Breaks out of the narrow feed column to the full width of the page scroll area
+   (the nearest inline-size container). */
 .featured {
+  container: featured-picks / inline-size;
+  width: 100cqw;
+  margin-inline: calc(50% - 50cqw);
   min-width: 0;
 }
 
+/* Phones: the rail runs to the screen edge with a peek of the next card. */
 .carousel {
+  --rail-gap: 16px;
   display: flex;
-  gap: 16px;
+  gap: var(--rail-gap);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   align-items: stretch;
-  margin-inline: calc(-1 * var(--ed-page,20px));
   padding-inline: var(--ed-page,20px);
   scroll-padding-inline: var(--ed-page,20px);
 }
@@ -304,6 +311,43 @@
 
 .slide>.plate {
   width: 100%;
+}
+
+/* Wider screens: line the rail up with the sport tabs and fill it with whole cards only. */
+@container featured-picks (width >= 42rem) {
+  .carousel {
+    --cols: min(2, var(--count, 2));
+    width: min(100% - 2 * var(--ds-dashboard-gutter, 1rem), 80rem - 2 * var(--ds-dashboard-gutter, 1rem));
+    margin-inline: auto;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+  }
+
+  .slide {
+    flex-basis: calc((100% - (var(--cols) - 1) * var(--rail-gap)) / var(--cols));
+  }
+}
+
+@container featured-picks (width >= 64rem) {
+  .carousel {
+    --cols: min(3, var(--count, 3));
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .carousel {
+    cursor: grab;
+  }
+}
+
+.carousel[data-dragging] {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
+}
+
+.carousel[data-dragging] .slide {
+  pointer-events: none;
 }
 
 .indicators {

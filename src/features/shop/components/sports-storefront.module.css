@@ -1,0 +1,12 @@
+.storeKicker { margin-top: var(--ds-space-8); color: var(--ds-color-accent-cyan); font: var(--ds-weight-bold) var(--ds-text-xs)/var(--ds-leading-body) var(--ds-font-body); letter-spacing: var(--ds-tracking-wide); }
+.storeLede { margin: var(--ds-space-4) 0 var(--ds-space-24); color: var(--ds-color-text-muted); font-size: var(--ds-text-sm); }
+.sportsToolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--ds-space-8) var(--ds-space-16); padding-block: var(--ds-space-8); margin-bottom: var(--ds-space-20); border-bottom: 1px solid var(--ds-color-border-default); }
+.sportsToolbar [role="tablist"] { flex: 1; min-width: 0; margin: 0; }
+.sportSelect, .catalogSort { display: flex; align-items: center; gap: var(--ds-space-8); min-height: 44px; color: var(--ds-color-text-muted); font-size: var(--ds-text-xs); }
+.sportSelect select, .catalogSort select { max-width: 100%; min-height: 44px; padding: var(--ds-space-8); border: 1px solid var(--ds-color-border-default); background: var(--ds-color-background-secondary); color: var(--ds-color-text-default); font: inherit; cursor: pointer; }
+.collectionHeading { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); margin-bottom: var(--ds-space-16); }
+.collectionHeading h2 { font: var(--ds-weight-bold) var(--ds-text-xl)/var(--ds-leading-tight) var(--ds-font-display); }
+.collectionHeading p { margin-top: var(--ds-space-8); color: var(--ds-color-text-muted); font-size: var(--ds-text-sm); }
+.lockerToggle { display: flex; align-items: center; gap: var(--ds-space-8); min-height: 44px; padding: var(--ds-space-8) var(--ds-space-12); border: 1px solid var(--ds-color-border-default); color: var(--ds-color-text-muted); font-size: var(--ds-text-xs); cursor: pointer; }
+.lockerToggle:hover, .lockerToggle[aria-pressed="true"] { border-color: var(--ds-color-accent-cyan); color: var(--ds-color-accent-cyan); background: color-mix(in srgb, var(--ds-color-accent-cyan) 7%, transparent); }
+@media (max-width: 600px) { .sportsToolbar { display: block; } .sportSelect { justify-content: flex-end; margin-top: var(--ds-space-8); } .catalogSort>span { display: none; } }

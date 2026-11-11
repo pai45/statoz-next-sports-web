@@ -13,6 +13,8 @@ import { FilterChips, FullscreenExitIcon, FullscreenIcon } from "@statoz/design-
 import type { MatchTrace, SportMatch } from "@/domain/matches";
 
 import styles from "./match-stats.module.css";
+import { statText, traceIndexForKey } from "../stats-presentation";
+import { EmptyPanel } from "./match-stats-shell";
 
 /**
  * A two-sided trace: both teams on one axis, scrubbable, with the events that
@@ -112,42 +114,44 @@ export function MatchTraceChart({
     }
   };
 
+  if (!trace.home.length && !trace.away.length) return <EmptyPanel title="Chart unavailable" message="No scoring samples have been published for this match." />;
+
   return (
     <section ref={panel} className={styles.tracePanel}>
       <header className={styles.traceHead}>
         <span className={styles.traceTitleRow}>
           <b>{trace.title}</b>
-          {showInningsModes ? (
+          {(
             <span className={styles.traceActions}>
               <button
                 type="button"
                 className={styles.traceFullscreen}
-                aria-label={isFullscreen ? "Exit run race fullscreen" : "Open run race fullscreen"}
+                aria-label={isFullscreen ? "Exit chart fullscreen" : "Open chart fullscreen"}
                 aria-pressed={isFullscreen}
                 onClick={toggleFullscreen}
               >
                 {isFullscreen ? <FullscreenExitIcon size={18} /> : <FullscreenIcon size={18} />}
               </button>
-              <small>{points} OVERS</small>
+              {showInningsModes && <small>{points} SAMPLES</small>}
             </span>
-          ) : null}
+          )}
         </span>
         {showInningsModes ? (
           <FilterChips
             options={[...inningsModes]}
             selected={mode}
             onSelect={selectMode}
-            label="Run race period"
+            label="Run progression period"
             className={styles.traceModes}
           />
         ) : null}
         <span className={styles.traceReadout}>
           <span style={{ color: homeColor }} className="ds-tabular">
-            {homeLabel ?? match.home.shortName} {home[index] ?? 0}
+            {homeLabel ?? match.home.shortName} {statText(home[index])}
           </span>
           <small>{ticks[index] ?? ""}</small>
           <span style={{ color: awayColor }} className="ds-tabular">
-            {awayLabel ?? match.away.shortName} {away[index] ?? 0}
+            {awayLabel ?? match.away.shortName} {statText(away[index])}
           </span>
         </span>
       </header>
@@ -161,7 +165,7 @@ export function MatchTraceChart({
         aria-valuemin={0}
         aria-valuemax={Math.max(0, points - 1)}
         aria-valuenow={index}
-        aria-valuetext={`${ticks[index] ?? index}: ${match.home.shortName} ${home[index] ?? 0} ${trace.unit}, ${match.away.shortName} ${away[index] ?? 0} ${trace.unit}`}
+        aria-valuetext={`${ticks[index] ?? index}: ${match.home.shortName} ${statText(home[index])} ${trace.unit}, ${match.away.shortName} ${statText(away[index])} ${trace.unit}`}
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId);
           scrub(event);
@@ -170,12 +174,14 @@ export function MatchTraceChart({
           if (event.buttons === 1) scrub(event);
         }}
         onKeyDown={(event) => {
-          if (event.key === "ArrowRight") setSelected((value) => Math.min(points - 1, value + 1));
-          if (event.key === "ArrowLeft") setSelected((value) => Math.max(0, value - 1));
+          const next = traceIndexForKey(event.key, index, points);
+          if (next === null) return;
+          event.preventDefault();
+          setSelected(next);
         }}
       >
         <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} preserveAspectRatio="none" aria-hidden="true">
-          <path d={path(away)} fill="none" stroke={awayColor} strokeWidth={3} vectorEffect="non-scaling-stroke" />
+          <path d={path(away)} fill="none" stroke={awayColor} strokeWidth={3} strokeDasharray="8 5" vectorEffect="non-scaling-stroke" />
           <path d={path(home)} fill="none" stroke={homeColor} strokeWidth={3} vectorEffect="non-scaling-stroke" />
         </svg>
 

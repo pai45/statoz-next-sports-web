@@ -11,7 +11,10 @@ import {
   type ProgressTrack,
   type TrackXp,
 } from "@/domain/progression";
-import { useGameCareer } from "@/features/games";
+// Direct path, not the games barrel: the barrel loads every game screen, and
+// some of those import the profile barrel back, which leaves a module undefined
+// mid-evaluation under webpack.
+import { useGameCareer } from "@/features/games/state/game-career";
 import { useEconomy } from "@/features/economy";
 import { collectionFromIds } from "@/features/packs";
 import { predictionCareer, usePredictions } from "@/features/predictions";

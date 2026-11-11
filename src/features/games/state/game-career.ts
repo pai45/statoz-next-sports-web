@@ -7,6 +7,11 @@ import type { TrackXp } from "@/domain/progression";
 
 import { useHoopDuelStats } from "../basketball/state/hoop-duel-progress";
 import { useQuizStats } from "../quiz/state/quiz-progress";
+import { useDailyQuizStats } from "../daily-quiz/state/daily-quiz-store";
+import { useWhoAreYaStats } from "../who-are-ya/state/who-are-ya-store";
+import { useGridStats } from "../grid/state/grid-store";
+import { useConnectionsStats } from "../connections/state/connections-store";
+import { useHigherLowerStats } from "../higher-lower/state/higher-lower-store";
 import { useFinalOverStats } from "../final-over/state/final-over-progress";
 import { useGrandPrixStats } from "../grand-prix/state/grand-prix-progress";
 import { useGuessPlayerStats } from "../guess-player/state/guess-player-store";
@@ -67,6 +72,11 @@ export function useGameCareer(): GameCareer {
   const pitchDuel = usePitchDuelProgress();
   const tennis = useTennisProgress();
   const quiz = useQuizStats();
+  const dailyQuiz = useDailyQuizStats();
+  const whoAreYa = useWhoAreYaStats();
+  const grid = useGridStats();
+  const connections = useConnectionsStats();
+  const higherLower = useHigherLowerStats();
   const guessPlayer = useGuessPlayerStats();
   const grandPrix = useGrandPrixStats();
 
@@ -82,9 +92,16 @@ export function useGameCareer(): GameCareer {
     if (shootout.xp > 0) xpByTrack.shootout = shootout.xp;
     if (pitchDuel.xp > 0) xpByTrack.pitchDuel = pitchDuel.xp;
     if (tennisXp > 0) xpByTrack.tennis = tennisXp;
-    if (quiz.xp > 0) xpByTrack.quiz = quiz.xp;
-    if (guessPlayer.xp > 0) xpByTrack.guessPlayer = guessPlayer.xp;
+    // The Daily Quiz deals from the same question pools, so it pays into the
+    // same track rather than a new one the profile would have to learn about.
+    // Higher or Lower is sports knowledge too, so it joins the quiz track.
+    if (quiz.xp + dailyQuiz.xp + higherLower.xp > 0) xpByTrack.quiz = quiz.xp + dailyQuiz.xp + higherLower.xp;
+    // Who Are Ya is the same skill as Guess the Player (naming a mystery
+    // player), so it pays into that track.
+    if (guessPlayer.xp + whoAreYa.xp > 0) xpByTrack.guessPlayer = guessPlayer.xp + whoAreYa.xp;
     if (grandPrix.xp > 0) xpByTrack.grandPrix = grandPrix.xp;
+    // The Grid is the same club-pairing skill as Bingo, so it pays into that track.
+    if (grid.xp + connections.xp > 0) xpByTrack.bingo = (xpByTrack.bingo ?? 0) + grid.xp + connections.xp;
 
     for (const track of Object.keys(xpByTrack)) if (!isTrackEnabled(track)) delete xpByTrack[track as keyof TrackXp];
     const played =
@@ -135,5 +152,5 @@ export function useGameCareer(): GameCareer {
       tennisAchievements: tennis.achievements,
       modesPlayed,
     };
-  }, [finalOver, hoopDuel, shootout, pitchDuel, tennis, quiz, guessPlayer, grandPrix]);
+  }, [finalOver, hoopDuel, shootout, pitchDuel, tennis, quiz, dailyQuiz, whoAreYa, grid, connections, higherLower, guessPlayer, grandPrix]);
 }

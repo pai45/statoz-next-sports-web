@@ -1,7 +1,13 @@
-import { Suspense } from "react";
-import { HomeHub } from "../_components/home-hub";
-import { GamesTrendingFeed, SportGameDeck } from "@/features/games";
-import { sportOrder, type Sport } from "@/domain/sports";
-import type { ReactNode } from "react";
-const sportDecks = Object.fromEntries(sportOrder.map(sport=>[sport,<SportGameDeck key={sport} sport={sport}/>])) as Record<Sport,ReactNode>;
-export default function QuizPage(){return <Suspense><HomeHub mode="games" matchFeed={null} gamesFeed={<GamesTrendingFeed/>} sportDecks={sportDecks}/></Suspense>;}
+import type { Metadata } from "next";
+
+import { QuizHub } from "@/features/games/hub";
+
+export const metadata: Metadata = {
+  title: "Quiz",
+  description: "Today's free daily sports quizzes and games, plus the full quiz paths for every sport.",
+};
+
+/** The ALL view: today's daily games across every sport. */
+export default function QuizPage() {
+  return <QuizHub sport={null} />;
+}

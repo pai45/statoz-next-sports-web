@@ -105,3 +105,10 @@
   .pitch { margin-inline: 0; }
   .detail { grid-template-columns: 1fr; }
 }
+.shotSelect { display: grid; gap: var(--ds-space-6); margin-block: var(--ds-space-12); font: var(--ds-weight-medium) var(--ds-text-xs)/var(--ds-leading-body) var(--ds-font-body); color: var(--ds-color-text-muted); }
+.shotSelect select { width: 100%; min-width: 0; min-height: 44px; padding: var(--ds-space-8); border: 1px solid var(--ds-color-border-default); color: var(--ds-color-text-default); background: var(--ds-color-background-secondary); font: inherit; }
+.shot { width: 44px; height: 44px; }
+.header { flex-wrap: wrap; }
+.header h3, .header span, .caption, .empty, .outcomes, .detail header { font-size: var(--ds-text-xs); letter-spacing: var(--ds-tracking-label); }
+.filters { display: flex; overflow-x: auto; }
+.filters>button { width: auto; flex: none; min-height: 44px; }

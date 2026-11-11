@@ -7,3 +7,13 @@
 .legend small { margin-left: auto; color: var(--ds-color-text-muted); }
 .readout { padding: var(--ds-space-3); border-left: 2px solid var(--ds-color-accent-orange); background: var(--ds-color-background-data); }
 .readout b,.readout span { display: block; }.readout span,.readout p { color: var(--ds-color-text-muted); font-size: var(--ds-text-xs); }.readout p { margin-bottom: 0; }
+.shotSelect { display: grid; gap: var(--ds-space-6); margin-block: var(--ds-space-12); font: var(--ds-weight-medium) var(--ds-text-xs)/var(--ds-leading-body) var(--ds-font-body); color: var(--ds-color-text-muted); }
+.shotSelect select { width: 100%; min-width: 0; min-height: 44px; padding: var(--ds-space-8); border: 1px solid var(--ds-color-border-default); color: var(--ds-color-text-default); background: var(--ds-color-background-secondary); font: inherit; }
+.court button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: transparent; }
+.court button::before { content: ''; width: 14px; height: 14px; border: 2px solid var(--shot-color); border-radius: 50%; background: var(--shot-color); }
+.court button.three { background: transparent; }
+.court button.three::before { background: var(--ds-color-background-data); }
+.court button[aria-pressed='true'] { outline: 0; }
+.court button[aria-pressed='true']::before { outline: 2px solid var(--ds-color-text-default); outline-offset: 3px; }
+.court button:focus-visible { outline: 2px solid var(--ds-color-accent-cyan); outline-offset: -2px; }
+.readout, .readout span, .readout p, .legend small { font-size: var(--ds-text-xs); line-height: var(--ds-leading-body); }

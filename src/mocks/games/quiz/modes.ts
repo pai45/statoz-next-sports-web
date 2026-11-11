@@ -19,7 +19,9 @@ export const modeLabels: Record<QuizMode, string> = {
   easy: "EASY",
   medium: "MEDIUM",
   hard: "HARD",
-  global: "GLOBAL",
+  // The mode id stays `global` (it keys the question files and saved
+  // progress); the name says what it covers rather than how hard it is.
+  global: "WORLD",
 };
 
 export function modeAccent(mode: QuizMode): string {

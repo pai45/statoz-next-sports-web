@@ -31,7 +31,7 @@
 .identity { display: flex; align-items: center; gap: 12px; }
 .identityCopy { display: grid; min-width: 0; flex: 1; gap: 4px; }
 .identityCopy strong { overflow: hidden; color: var(--ds-color-text-default); font-family: var(--ds-font-display); font-size:var(--ds-size-p15); font-weight:var(--ds-weight-black); letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
-.identityCopy small { color: var(--ds-color-text-muted); font-family: var(--ds-font-display); font-size:var(--ds-size-p8_5); font-weight:var(--ds-weight-black); letter-spacing: .09em; }
+.identityCopy small { color: var(--ds-color-text-muted); font-family: var(--ds-font-display); font-size:var(--ds-text-xs); font-weight:var(--ds-weight-black); letter-spacing: .09em; }
 
 .sheetState {
   flex: none;
@@ -40,7 +40,7 @@
   background: color-mix(in srgb, var(--state-color) 10%, transparent);
   color: var(--state-color);
   font-family: var(--ds-font-display);
-  font-size:var(--ds-size-p8);
+  font-size:var(--ds-text-xs);
   font-weight:var(--ds-weight-black);
   letter-spacing: .09em;
 }
@@ -177,7 +177,7 @@ button.player:focus-visible { outline-color: var(--team-color); outline-offset: 
   border: 1px solid color-mix(in srgb, var(--ds-color-border-strong) 20%, transparent);
   background: color-mix(in srgb, var(--ds-color-background-primary) 82%, transparent);
   color: var(--ds-color-text-default);
-  font-size:var(--ds-size-p8_5);
+  font-size:var(--ds-text-xs);
   font-weight:var(--ds-weight-extrabold);
   text-align: center;
   text-overflow: ellipsis;
@@ -210,8 +210,8 @@ button.player:focus-visible { outline-color: var(--team-color); outline-offset: 
 /* ---- Bench ----------------------------------------------------------------- */
 
 .benchHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; font-family: var(--ds-font-display); font-weight:var(--ds-weight-black); }
-.benchHead b { color: var(--team-color); font-size:var(--ds-size-p10); letter-spacing: .12em; }
-.benchHead small { color: var(--ds-color-text-muted); font-size:var(--ds-size-p8); letter-spacing: .08em; }
+.benchHead b { color: var(--team-color); font-size:var(--ds-text-xs); letter-spacing: .12em; }
+.benchHead small { color: var(--ds-color-text-muted); font-size:var(--ds-text-xs); letter-spacing: .08em; }
 
 .benchEmpty { margin: 0; color: var(--ds-color-text-muted); font-size:var(--ds-size-p12); }
 
@@ -232,11 +232,11 @@ button.benchTile { cursor: pointer; transition: border-color 130ms ease, backgro
 button.benchTile:hover { border-color: color-mix(in srgb, var(--team-color) 50%, transparent); background: color-mix(in srgb, var(--team-color) 7%, var(--ds-color-background-secondary)); }
 button.benchTile:active { scale: .97; }
 button.benchTile:focus-visible { outline-color: var(--team-color); }
-.benchTile > b { width: 28px; flex: none; color: var(--team-color); font-family: var(--ds-font-display); font-size:var(--ds-size-p10); font-weight:var(--ds-weight-black); font-variant-numeric: tabular-nums; }
+.benchTile > b { width: 28px; flex: none; color: var(--team-color); font-family: var(--ds-font-display); font-size:var(--ds-text-xs); font-weight:var(--ds-weight-black); font-variant-numeric: tabular-nums; }
 .benchTile > span { display: grid; min-width: 0; }
 .benchTile > .playerMarks { position: static; display: flex; min-width: auto; margin-left: auto; }
-.benchTile strong { overflow: hidden; color: var(--ds-color-text-default); font-size:var(--ds-size-p10); font-weight:var(--ds-weight-extrabold); text-overflow: ellipsis; white-space: nowrap; }
-.benchTile small { overflow: hidden; color: var(--ds-color-text-muted); font-family: var(--ds-font-display); font-size:var(--ds-size-p7); font-weight:var(--ds-weight-black); letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+.benchTile strong { overflow: hidden; color: var(--ds-color-text-default); font-size:var(--ds-text-xs); font-weight:var(--ds-weight-extrabold); text-overflow: ellipsis; white-space: nowrap; }
+.benchTile small { overflow: hidden; color: var(--ds-color-text-muted); font-family: var(--ds-font-display); font-size:var(--ds-text-xs); font-weight:var(--ds-weight-black); letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- Desktop --------------------------------------------------------------- */
 
@@ -254,3 +254,12 @@ button.benchTile:focus-visible { outline-color: var(--team-color); }
   .bench { grid-template-columns: minmax(0, 1fr); }
   .view { height: auto; }
 }
+/* The enclosing report owns scrolling; never nest another vertical scroller. */
+.view { height: auto; min-height: 0; }
+.scroll { overflow: visible; padding-inline: 0; flex: none; }
+.identityCopy small, .sheetState, .benchTile small { font-size: var(--ds-text-xs); letter-spacing: var(--ds-tracking-label); }
+.benchTile strong { font-size: var(--ds-text-compact); white-space: normal; }
+.panel { clip-path: none; }
+.panel, .pitch { border: 1px solid var(--ds-color-border-default); }
+.pitch { clip-path: none; }
+@container (width >= 52rem) { .scroll { padding-inline: 0; } }

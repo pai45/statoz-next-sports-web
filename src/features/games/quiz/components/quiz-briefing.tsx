@@ -103,7 +103,7 @@ export function QuizBriefing({
             className="flex-1 font-display font-black leading-none"
             style={{ fontSize: typography.sizeRem.p17, letterSpacing: "var(--ds-tracking-ultra)" }}
           >
-            ENTRY BRIEFING
+            REPLAY SET
           </h2>
           <button
             type="button"
@@ -133,7 +133,7 @@ export function QuizBriefing({
                   </p>
                   <p
                     className="mt-1.25 truncate font-display font-black leading-none text-muted"
-                    style={{ fontSize: typography.sizeRem.p8_5, letterSpacing: "var(--ds-tracking-wide)" }}
+                    style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-wide)" }}
                   >
                     {sportModuleFor(sport).label.toUpperCase()} ·{" "}
                     {modeBlurb(mode, sport)}
@@ -190,7 +190,7 @@ export function QuizBriefing({
           <span
             className="font-display font-black leading-none"
             style={{
-              fontSize: typography.sizeRem.p10,
+              fontSize: typography.sizeRem.p11,
               letterSpacing: "var(--ds-tracking-ultra)",
               color: canAfford ? undefined : feedbackVar("danger"),
             }}
@@ -213,7 +213,7 @@ export function QuizBriefing({
           </Button>
           <p
             className="mt-2 text-center font-display font-black leading-none text-muted"
-            style={{ fontSize: typography.sizeRem.p8_5, letterSpacing: "var(--ds-tracking-ultra)" }}
+            style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
           >
             {canAfford
               ? `${entryCost} COINS WILL BE SPENT`
@@ -243,13 +243,13 @@ function BriefingStat({
       </span>
       <span
         className="flex-1 font-display font-black leading-none text-muted"
-        style={{ fontSize: typography.sizeRem.p9, letterSpacing: "var(--ds-tracking-ultra)" }}
+        style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
       >
         {label}
       </span>
       <span
         className="font-display font-black leading-none"
-        style={{ fontSize: typography.sizeRem.p10, letterSpacing: "var(--ds-tracking-label)", color: accent }}
+        style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-label)", color: accent }}
       >
         {value}
       </span>

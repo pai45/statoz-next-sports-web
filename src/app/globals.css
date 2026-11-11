@@ -1,5 +1,10 @@
 @import "tailwindcss";
-@import "@statoz/design-system/web/styles/tokens.css";
+/* Updated shared console tokens, compatible with the Sports web primitives. */
+@import "@statoz/design-system/games/styles/tokens.css";
+@import "@statoz/design-system/games/styles/typography.css";
+
+/* Shared package recipes live outside Tailwind's automatic app source scan. */
+@source "../../node_modules/@statoz/design-system/games";
 
 @theme inline {
   /* Surfaces */

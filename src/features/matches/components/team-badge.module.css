@@ -39,3 +39,55 @@
   content: "";
   background: var(--team-secondary);
 }
+
+/* Sport crest designs (shield, roundel, crossed bats, wicket), drawn as SVG. */
+.crest {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.crestShadow {
+  fill: color-mix(in srgb, var(--team-primary) 42%, black);
+}
+
+.crestFace {
+  fill: var(--team-primary);
+}
+
+.crestRim {
+  fill: none;
+  stroke: var(--team-secondary);
+}
+
+.crestSecondary {
+  fill: var(--team-secondary);
+}
+
+.crestDeep {
+  fill: none;
+  stroke: color-mix(in srgb, var(--team-primary) 45%, black);
+}
+
+/* Bats and stumps keep the colour of willow whatever the team. */
+.crestWillow {
+  fill: #dcb57a;
+  stroke: #7d5d31;
+}
+
+.crestBall {
+  fill: #c8202a;
+}
+
+.crestGloss {
+  fill: #fff;
+  opacity: 0.1;
+}
+
+.crestLabel {
+  fill: var(--team-ink);
+  font-family: var(--ds-font-display);
+  font-weight: var(--ds-weight-bold);
+}

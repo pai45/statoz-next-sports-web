@@ -53,6 +53,12 @@ const activityMeta: Record<StreakActivity, { label: string; color: string }> = {
   pitchDuel: { label: "Pitch Duel completed", color: accentVar("orange") },
   penaltyShootout: { label: "Penalty Shootout completed", color: accentVar("violet") },
   guessPlayer: { label: "Guess the Player settled", color: accentVar("gold") },
+  dailyQuiz: { label: "Daily Quiz completed", color: accentVar("cyan") },
+  bingo: { label: "Football Bingo completed", color: accentVar("lime") },
+  whoAreYa: { label: "Who Are Ya? finished", color: accentVar("orange") },
+  grid: { label: "Football Grid finished", color: accentVar("violet") },
+  higherLower: { label: "Higher or Lower finished", color: accentVar("lime") },
+  connections: { label: "Connections finished", color: accentVar("gold") },
 };
 
 const categories: { id: Exclude<StreakCategory, "overall">; label: string; accent: string; icon: IconComponent }[] = [

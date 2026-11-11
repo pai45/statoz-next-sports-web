@@ -16,14 +16,22 @@ export function useHomeHubTheme() {
   return publish;
 }
 
-/** Only the root hub paints artwork; match details and other destinations keep their own backdrop. */
+/**
+ * Only the Matches hub paints the page-wide artwork. The QUIZ tab paints its
+ * sport worlds inside its own spotlight and covers, so a second world behind
+ * the whole page would only compete with them.
+ */
+function paintsBackdrop(pathname: string): boolean {
+  return pathname === "/";
+}
+
 export function HomeHubSurface({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<HubBackgroundTheme | null>(null);
   return (
     <HubThemeContext.Provider value={setTheme}>
       <div className={styles.surface}>
-        {pathname === "/" && theme && (
+        {paintsBackdrop(pathname) && theme && (
           <div className={styles.background}>
             <HubBackdrop theme={theme} assetRoot={publicAsset("/assets/backgrounds/hub")} />
           </div>

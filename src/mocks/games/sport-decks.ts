@@ -1,7 +1,6 @@
-import { isGameEnabled } from "@/domain/demo-product";
 import type { Sport } from "@/domain/sports";
 
-import { gameRegistry } from "./game-registry";
+import { gameRegistry, isGameLive } from "./game-registry";
 import type { GameId } from "@/features/games/types";
 
 /**
@@ -15,17 +14,32 @@ const sourceDecks: Record<Sport, GameId[]> = {
     "pitch-duel",
     "penalty-shootout",
     "football-chess",
-    "football-quiz",
-    "football-bingo",
+    "football-daily-quiz",
     "guess-player",
+    "football-who-are-ya",
+    "football-grid",
+    "football-connections",
+    "football-higher-lower",
+    "football-bingo",
+    "football-quiz",
   ],
-  cricket: ["retro-innings", "final-over", "cricket-quiz", "cricket-guess-player"],
-  basketball: ["retro-hoops", "hoop-duel", "basketball-quiz", "basketball-guess-player"],
-  tennis: ["tennis-rally", "tennis-quiz", "tennis-guess-winner"],
-  motorsport: ["retro-circuit", "grand-prix-dash", "motorsport-quiz", "guess-driver"],
+  cricket: ["retro-innings", "final-over", "cricket-daily-quiz", "cricket-guess-player", "cricket-who-are-ya", "cricket-higher-lower", "cricket-quiz"],
+  basketball: ["retro-hoops", "hoop-duel", "basketball-daily-quiz", "basketball-guess-player", "basketball-who-are-ya", "basketball-higher-lower", "basketball-quiz"],
+  tennis: ["tennis-rally", "tennis-daily-quiz", "tennis-higher-lower", "tennis-guess-winner", "tennis-quiz"],
+  motorsport: ["retro-circuit", "grand-prix-dash", "motorsport-daily-quiz", "motorsport-higher-lower", "guess-driver", "motorsport-quiz"],
 };
 
-export const sportGameDecks = Object.fromEntries(Object.entries(sourceDecks).map(([sport, games]) => [sport, games.filter(isGameEnabled)])) as Record<Sport, GameId[]>;
+export const sportGameDecks = Object.fromEntries(Object.entries(sourceDecks).map(([sport, games]) => [sport, games.filter(isGameLive)])) as Record<Sport, GameId[]>;
+
+/** A sport's daily games, in the order its TODAY row lists them. */
+export function dailyGamesFor(sport: Sport): GameId[] {
+  return sportGameDecks[sport].filter((id) => gameRegistry[id].daily === true);
+}
+
+/** The sport's quiz ladder game, which the QUIZ PATHS section opens. */
+export function quizPathsGameFor(sport: Sport): GameId | null {
+  return sportGameDecks[sport].find((id) => gameRegistry[id].format === "quiz-paths") ?? null;
+}
 
 export type SportDeck = {
   sport: Sport;

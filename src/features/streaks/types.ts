@@ -7,6 +7,12 @@ export const streakActivities = [
   "pitchDuel",
   "penaltyShootout",
   "guessPlayer",
+  "dailyQuiz",
+  "bingo",
+  "whoAreYa",
+  "grid",
+  "higherLower",
+  "connections",
 ] as const;
 
 export type StreakActivity = (typeof streakActivities)[number];
