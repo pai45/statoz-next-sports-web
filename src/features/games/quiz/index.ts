@@ -5,3 +5,5 @@
 export { SportQuiz } from "./components/sport-quiz";
 
 export { useQuizStats, type QuizStats } from "./state/quiz-progress";
+
+export { continueTarget } from "./state/continue-target";

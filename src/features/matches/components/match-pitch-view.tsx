@@ -147,7 +147,9 @@ function Board({
   players: MatchPlayerDossier[];
   onSelect?: (name: string) => void;
 }) {
-  const counts = [1, ...lineup.formation.split("-").map((part) => Number.parseInt(part, 10) || 0)];
+  const shape = lineup.formation.split("-").map((part) => Number.parseInt(part, 10)).filter(count => count > 0);
+  // Basketball formations already describe all five starters; football adds its keeper.
+  const counts = basketball ? shape.reduce((sum, count) => sum + count, 0) === lineup.players.length ? shape : [1, 2, 2] : [1, ...shape];
   const starters = [...lineup.players].sort((a, b) => (a.formationPlace ?? 999) - (b.formationPlace ?? 999));
   const rows: MatchDetailPlayer[][] = [];
   let cursor = 0;
@@ -159,13 +161,13 @@ function Board({
   if (cursor < starters.length) rows.push(starters.slice(cursor));
 
   return (
-    <section className={`${styles.panel} ${styles.boardPanel}`}>
+    <section className={`${styles.panel} ${styles.boardPanel}`} aria-label={`${basketball ? "Court" : "Pitch"} formation ${lineup.formation}`}>
       <div className={[styles.pitch, basketball ? styles.pitchCourt : ""].filter(Boolean).join(" ")}>
         <span aria-hidden className={styles.markings} />
         <span aria-hidden className={styles.goalAreas} />
         <span aria-hidden className={styles.centreCircle} />
         <span aria-hidden className={styles.centreSpot} />
-        <div className={styles.rows}>
+        <div className={styles.rows} style={{ "--formation-lines": rows.length } as CSSProperties}>
           {rows.map((row, index) => (
             <div key={index} className={styles.row}>
               {row.map((player) => (
@@ -199,7 +201,7 @@ function PitchPlayer({
       <b className={styles.playerNumber}>{player.number}</b>
         {dossier ? <PlayerMarks player={dossier} /> : null}
       </span>
-      <span className={styles.playerName}>{player.shortName ?? shortName(player.name)}</span>
+      <span className={styles.playerName} title={player.name}>{player.shortName ?? shortName(player.name)}</span>
     </>
   );
   return onSelect ? (

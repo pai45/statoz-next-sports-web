@@ -12,6 +12,7 @@ import {
   TrophyIcon,
 } from "@statoz/design-system/web";
 import type { SportMatch } from "@/domain/matches";
+import { TeamBadge } from "@/features/matches/components/team-badge";
 import type { SettlementQuestionResult } from "@/domain/predictions";
 import { useFullScreenMoment, usePrefersReducedMotion } from "@/shared/hooks";
 
@@ -36,11 +37,13 @@ import styles from "./predictions.module.css";
 const lockedHoldMs = 4500;
 
 export function PredictionLockedOverlay({
+  match,
   potentialXp,
   count,
   automatic,
   onDone,
 }: {
+  match: SportMatch;
   potentialXp: number;
   count: number;
   automatic: boolean;
@@ -84,6 +87,7 @@ export function PredictionLockedOverlay({
 
   return (
     <div className={`${styles.overlay} ${styles.lockOverlay}`} role="status" aria-label={headline}>
+      {match.sport !== "motorsport" && <div className={styles.predictionTeams}><TeamBadge team={match.home} size={48}/><span>{match.home.shortName} vs {match.away.shortName}</span><TeamBadge team={match.away} size={48}/></div>}
       <SubmitSeal />
 
       <div className={styles.lockCopy}>
@@ -225,11 +229,9 @@ export function SettlementRevealOverlay({
         <div className={styles.revealSheet}>
           <header className={styles.revealHead}>
             <h2 className={styles.revealTitle} style={{ color: "var(--ds-color-text-default)" }}>RESULTS ARE IN</h2>
+            <div className={styles.predictionTeams}>{match.sport !== "motorsport" && <TeamBadge team={match.home} size={40}/>}<span>{match.sport === "motorsport" ? match.home.name : `${match.home.shortName} vs ${match.away.shortName}`}</span>{match.sport !== "motorsport" && <TeamBadge team={match.away} size={40}/>}</div>
             <p className={styles.revealFixture}>
-              {match.home.shortName} vs {match.away.shortName}
-            </p>
-            <p className={styles.revealFixture}>
-              <span className={styles.tabular}>SETTLING {results.length} FUTURES</span>
+              <span className={styles.tabular}>REVEALING {results.length} PREDICTIONS</span>
               {"  ·  "}
               <b className={styles.tabular} style={{ color: "var(--ds-color-accent-gold)" }}>+{revealedXp} XP</b>
             </p>

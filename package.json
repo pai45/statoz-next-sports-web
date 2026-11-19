@@ -11,6 +11,8 @@
     "build": "node scripts/statoz.mjs build",
     "test": "node --test tests/operations/*.test.mjs",
     "test:match-stats": "node --import ./tests/helpers/register-stats.mjs --test tests/match-stats.test.tsx",
+    "test:picks": "node --import ./tests/helpers/register-picks.mjs --test tests/picks-market-detail.test.tsx",
+    "test:discovery": "node --import ./tests/helpers/register-discovery.mjs --test tests/sports-discovery-cards.test.tsx",
     "data:export": "node scripts/statoz.mjs transfer export",
     "data:import": "node scripts/statoz.mjs transfer import",
     "data:backup": "node scripts/statoz.mjs transfer backup",

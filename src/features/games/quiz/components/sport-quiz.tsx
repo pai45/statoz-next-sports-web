@@ -1,19 +1,11 @@
 "use client";
-import { typography } from "@statoz/design-system/web/tokens/typography";
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  accentVar,
-  ArrowLeftIcon,
-  BrandIcon,
-  withAlpha,
-} from "@statoz/design-system/web";
 import { totalTrackXp } from "@/domain/progression";
 import { sportModuleFor } from "@/domain/sports";
 import { settleCoinReward, spendCoins, useEconomy } from "@/features/economy";
 import { collectionFromIds } from "@/features/packs";
-import { formatInt } from "@/shared/utils";
 
 import type { GameLauncherProps } from "../../components/game-launcher";
 import { GameLandingAd } from "../../shared/components/game-landing-ad";
@@ -47,6 +39,9 @@ import { QuizLadder } from "./quiz-ladder";
 import { QuizLobby } from "./quiz-lobby";
 import { QuizPlay } from "./quiz-play";
 import { QuizReveal } from "./quiz-reveal";
+import { ArenaBackdrop, ArenaHeader, arenaTheme } from "./arena-shell";
+import { canContinue, continueTarget } from "../state/continue-target";
+import styles from "./arena.module.css";
 
 /**
  * One sport's Knowledge Arena, end to end.
@@ -60,8 +55,7 @@ import { QuizReveal } from "./quiz-reveal";
  * four files is 400 KB, and nobody plays four ladders at once.
  */
 
-const cyan = accentVar("cyan");
-const gold = accentVar("gold");
+
 
 type View =
   | { name: "lobby" }
@@ -122,7 +116,11 @@ export function SportQuiz({ game }: GameLauncherProps) {
    * Opening a mode fetches its pool first, so the ladder can say how many of
    * the fifty sets actually exist rather than offering ten that do not.
    */
+  const opening = useRef(false);
+  const paying = useRef(false);
   async function openMode(mode: QuizMode) {
+    if (opening.current) return false;
+    opening.current = true;
     setLoadingMode(mode);
     await ensureLoaded(sport, mode);
     setAuthored((current) => ({
@@ -131,6 +129,14 @@ export function SportQuiz({ game }: GameLauncherProps) {
     }));
     setLoadingMode(null);
     setView({ name: "ladder", mode });
+    opening.current = false;
+    return true;
+  }
+
+  async function continueArena() {
+    const target = continueTarget(progress);
+    if (!await openMode(target.mode)) return;
+    if (canContinue(progress, target.mode, target.set, authoredSetCount(sport, target.mode))) openSet(target.mode, target.set);
   }
 
   function startSet(mode: QuizMode, setNumber: number) {
@@ -146,7 +152,7 @@ export function SportQuiz({ game }: GameLauncherProps) {
    */
   function openSet(mode: QuizMode, setNumber: number) {
     const ladder = modeProgressOf(progress, mode);
-    if (!isSetUnlocked(ladder, setNumber)) return;
+    if (!isSetUnlocked(ladder, setNumber) || buildQuizSet(sport, mode, setNumber).length === 0) return;
     if (entryCostFor(setProgressOf(ladder, setNumber)) === 0) {
       startSet(mode, setNumber);
       return;
@@ -158,7 +164,8 @@ export function SportQuiz({ game }: GameLauncherProps) {
   }
 
   function confirmEntry() {
-    if (!briefing) return;
+    if (!briefing || paying.current || buildQuizSet(sport, briefing.mode, briefing.setNumber).length === 0) return;
+    paying.current = true;
     const cost = entryCostFor(setProgressOf(modeProgressOf(progress, briefing.mode), briefing.setNumber));
     if (cost > 0) {
       const paid = spendCoins({
@@ -167,7 +174,7 @@ export function SportQuiz({ game }: GameLauncherProps) {
         title: `${sportModuleFor(sport).label.toUpperCase()} QUIZ REPLAY`,
         subtitle: `${modeLabels[briefing.mode]} SET ${briefing.setNumber}`,
       });
-      if (!paid.ok) return;
+      if (!paid.ok) { paying.current = false; return; }
     }
     startSet(briefing.mode, briefing.setNumber);
   }
@@ -189,6 +196,8 @@ export function SportQuiz({ game }: GameLauncherProps) {
     return coins;
   }
 
+  useEffect(() => { paying.current = false; }, [view]);
+
   // A hub link can name a path (`?mode=`) and a set (`?set=`): open that
   // ladder, and start the set if it is open, so CONTINUE is one tap.
   const launched = useRef(false);
@@ -198,8 +207,7 @@ export function SportQuiz({ game }: GameLauncherProps) {
     const { mode, set } = readLaunchParams();
     if (!mode) return;
     void (async () => {
-      await openMode(mode);
-      if (set) openSet(mode, set);
+      if (await openMode(mode) && set) openSet(mode, set);
     })();
     // Runs once, the first time the record is readable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,6 +249,7 @@ export function SportQuiz({ game }: GameLauncherProps) {
   if (view.name === "reveal") {
     return (
       <QuizReveal
+        sport={sport}
         mode={view.mode}
         setNumber={view.setNumber}
         results={view.results}
@@ -252,162 +261,22 @@ export function SportQuiz({ game }: GameLauncherProps) {
         replayCost={entryCost}
         hasNextSet={view.setNumber < Math.min(setCount, authored[view.mode] ?? setCount)}
         onNext={() => openSet(view.mode, view.setNumber + 1)}
-        onReplay={() => {
-          setView({ name: "ladder", mode: view.mode });
-          setBriefing({ mode: view.mode, setNumber: view.setNumber });
-        }}
+        onReplay={() => openSet(view.mode, view.setNumber)}
         onDone={() => setView({ name: "ladder", mode: view.mode })}
       />
     );
   }
 
   const ladderMode = view.name === "ladder" ? view.mode : null;
-
-  return (
-    <>
-      <div className="relative flex min-h-dvh flex-col">
-      <QuizHeader
-        title={
-          ladderMode
-            ? `${modeLabels[ladderMode]} SETS`
-            : `${sportModuleFor(sport).label.toUpperCase()} QUIZ`
-        }
-        subtitle={ladderMode ? "KNOWLEDGE LADDER" : "KNOWLEDGE ARENA"}
-        coins={economy.coins}
-        showCoins={ladderMode !== null}
-        onBack={ladderMode ? () => setView({ name: "lobby" }) : null}
-        onLeave={goBack}
-      />
-
-      {!hydrated ? (
-        <Loading />
-      ) : ladderMode ? (
-        <QuizLadder
-          sport={sport}
-          mode={ladderMode}
-          progress={modeProgressOf(progress, ladderMode)}
-          authoredSets={authored[ladderMode] ?? 0}
-          launchingSet={briefing?.setNumber ?? null}
-          onOpenSet={(setNumber) => openSet(ladderMode, setNumber)}
-        />
-      ) : (
-        <QuizLobby
-          sport={sport}
-          progress={progress}
-          onPickMode={(mode) => {
-            if (loadingMode) return;
-            void openMode(mode);
-          }}
-        />
-      )}
-
-        {briefing ? (
-          <QuizBriefing
-            sport={sport}
-            mode={briefing.mode}
-            setNumber={briefing.setNumber}
-            coins={economy.coins}
-            onCancel={() => setBriefing(null)}
-            onStart={confirmEntry}
-          />
-        ) : null}
-      </div>
-      {view.name === "lobby" && hydrated ? <GameLandingAd /> : null}
-    </>
-  );
-}
-
-/** The bar above every browse view: a way out, the title, and the wallet. */
-function QuizHeader({
-  title,
-  subtitle,
-  coins,
-  showCoins,
-  onBack,
-  onLeave,
-}: {
-  title: string;
-  subtitle: string;
-  coins: number;
-  showCoins: boolean;
-  /** Null on the lobby, whose back button leaves the quiz altogether. */
-  onBack: (() => void) | null;
-  onLeave: () => void;
-}) {
-  return (
-    <header
-      className="flex shrink-0 items-center gap-2 px-3 py-3"
-      style={{ borderBottom: `1px solid ${withAlpha(cyan, 0.16)}` }}
-    >
-      {onBack ? (
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Back to categories"
-          className="grid size-10 shrink-0 cursor-pointer place-items-center"
-          style={{ color: cyan }}
-        >
-          <ArrowLeftIcon size={18} />
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={onLeave}
-          aria-label="Leave the quiz"
-          className="grid size-10 shrink-0 place-items-center"
-          style={{ color: cyan }}
-        >
-          <ArrowLeftIcon size={18} />
-        </button>
-      )}
-
-      <div className="min-w-0 flex-1">
-        <h1
-          className="truncate font-display font-black leading-none"
-          style={{ fontSize: typography.sizeRem.p15, letterSpacing: "var(--ds-tracking-ultra)" }}
-        >
-          {title}
-        </h1>
-        <p
-          className="mt-1 truncate font-display font-black leading-none text-muted"
-          style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
-        >
-          {subtitle}
-        </p>
-      </div>
-
-      {showCoins ? (
-        <span
-          className="flex shrink-0 items-center gap-1.5 border px-2.25 py-1.75"
-          style={{
-            background: withAlpha(gold, 0.08),
-            borderColor: withAlpha(gold, 0.38),
-          }}
-          aria-label={`${coins} coins available`}
-        >
-          <BrandIcon name="ozCoins" size={16} alt="" />
-          <span
-            className="ds-tabular font-display font-black leading-none"
-            style={{ fontSize: typography.sizeRem.p11, color: gold }}
-          >
-            {formatInt(coins)}
-          </span>
-        </span>
-      ) : null}
-    </header>
-  );
-}
-
-/** The beat before the browser's own record has been read. */
-function Loading() {
-  return (
-    <div className="grid flex-1 place-items-center">
-      <p
-        className="font-display font-black leading-none text-muted"
-        style={{ fontSize: typography.sizeRem.p11, letterSpacing: "var(--ds-tracking-ultra)" }}
-      >
-        LOADING...
-      </p>
-    </div>
-  );
+  return <>
+    {!hydrated ? <section className={styles.arena} style={arenaTheme(sport)}><ArenaHeader sport={sport} title="Knowledge Arena" onBack={goBack} /><p className={styles.content} role="status">Opening your arena...</p></section> : ladderMode ?
+      <section className={styles.arena} style={arenaTheme(sport)}>
+        <ArenaBackdrop sport={sport} />
+        <ArenaHeader sport={sport} title={`${modeLabels[ladderMode]} sets`} onBack={() => setView({ name: "lobby" })}><span className={styles.wallet}>{economy.coins} Oz</span></ArenaHeader>
+        <QuizLadder sport={sport} mode={ladderMode} progress={modeProgressOf(progress, ladderMode)} authoredSets={authored[ladderMode] ?? 0} launchingSet={briefing?.setNumber ?? null} onOpenSet={set => openSet(ladderMode, set)} />
+        {briefing && <QuizBriefing sport={sport} mode={briefing.mode} setNumber={briefing.setNumber} coins={economy.coins} onCancel={() => setBriefing(null)} onStart={confirmEntry} />}
+      </section> :
+      <QuizLobby sport={sport} progress={progress} loadingMode={loadingMode} onPickMode={mode => { void openMode(mode); }} onContinue={() => { void continueArena(); }} onLeave={goBack} />}
+    {view.name === "lobby" && hydrated && <GameLandingAd />}
+  </>;
 }

@@ -56,7 +56,9 @@ for (const sport of ["football", "cricket", "basketball", "tennis", "motorsport"
     assert.ok(fixture);
     const html = renderToStaticMarkup(<MatchScoreboard match={fixture} scoreboard={matchDetailFor(fixture).scoreboard} />);
     assert.ok(html.includes(`data-match-stats="${sport}"`));
-    assert.ok(html.includes("Inside the match"));
+    assert.ok(!html.includes("Inside the match"));
+    assert.ok(!html.includes("/ MATCH CENTRE"));
+    assert.ok(!html.includes("MATCH COMPLETE"));
     assert.ok(html.includes('role="tablist"'));
     assert.ok(html.includes('role="tabpanel"'));
     assert.ok(!html.includes("NaN"));

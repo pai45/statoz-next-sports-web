@@ -3,7 +3,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
 import { accentVar, ArrowLeftIcon, FlameIcon } from "@statoz/design-system/web";
-import { sportModuleFor, sportOrder, type Sport } from "@/domain/sports";
+import { sportModuleFor, sportOrder, matchSportOrder, type Sport } from "@/domain/sports";
 
 import { SportIcon } from "./sport-icon";
 import type { SportHubSelection } from "./sport-hub-tabs";
@@ -41,8 +41,9 @@ export function AllSportsSelector({
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  const total = sportOrder.reduce((sum, sport) => sum + counts[sport].total, 0);
-  const live = sportOrder.reduce((sum, sport) => sum + (counts[sport].live ?? 0), 0);
+  const sports = mode === "matches" ? matchSportOrder : sportOrder;
+  const total = sports.reduce((sum, sport) => sum + counts[sport].total, 0);
+  const live = sports.reduce((sum, sport) => sum + (counts[sport].live ?? 0), 0);
 
   function choose(next: SportHubSelection) {
     onSelect(next);
@@ -93,7 +94,7 @@ export function AllSportsSelector({
               icon={<FlameIcon size={25} />}
               onClick={() => choose(null)}
             />
-            {sportOrder.map((sport) => {
+            {sports.map((sport) => {
               const sportModule = sportModuleFor(sport);
               const count = counts[sport];
               const countLabel = mode === "matches"

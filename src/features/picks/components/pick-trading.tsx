@@ -33,6 +33,7 @@ export function usePickTrading(): {
   openTrade: (market: PickMarket, outcomeId: string) => void;
   claim: (position: PickPosition) => void;
   claimAll: () => void;
+  onPlaced: (success: PickTradeSuccess) => void;
   overlays: ReactNode;
 } {
   const requireAuth = useRequireAuth();
@@ -42,9 +43,6 @@ export function usePickTrading(): {
   const [reveal, setReveal] = useState<PickRevealData | null>(null);
 
   function openTrade(market: PickMarket, outcomeId: string): void {
-    if (!requireAuth({ intent: "lock a pick", message: "Log in to buy shares and save this pick." })) {
-      return;
-    }
     const outcome = outcomeFor(market, outcomeId);
     if (outcome) setTrade({ market, outcome });
   }
@@ -62,6 +60,11 @@ export function usePickTrading(): {
     if (result.settledCount > 0) setReveal(revealForBatch(result, selectWinStreak(readPicks())));
   }
 
+  function onPlaced(success: PickTradeSuccess): void {
+    setTrade(null);
+    setLocked(success);
+  }
+
   const overlays = (
     <>
       <PickTradeSheet
@@ -69,10 +72,7 @@ export function usePickTrading(): {
         market={trade?.market ?? null}
         outcome={trade?.outcome ?? null}
         onClose={() => setTrade(null)}
-        onPlaced={(success) => {
-          setTrade(null);
-          setLocked(success);
-        }}
+        onPlaced={onPlaced}
       />
       <PickLockedOverlay
         success={locked}
@@ -83,5 +83,5 @@ export function usePickTrading(): {
     </>
   );
 
-  return { openTrade, claim, claimAll, overlays };
+  return { openTrade, claim, claimAll, onPlaced, overlays };
 }

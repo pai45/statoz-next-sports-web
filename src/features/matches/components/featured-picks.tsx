@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } fr
 import { type PickMarket } from "@/domain/predictions";
 import styles from "./editorial-discovery.module.css";
 import { EditorialMarketCard } from "./editorial-market-card";
+import { ChevronLeftIcon, ChevronRightIcon } from "@statoz/design-system/web";
 
 const SLIDE_KEY = "statoz.next.sports-web.featured-pick-slide";
 /** Mouse travel (px) before a press turns into a drag, so plain clicks still reach the cards. */
@@ -121,9 +122,11 @@ export function FeaturedPicks({ markets, onPick }: {
         show(target);
     }
 
-    return <section className={styles.featured} aria-label="Featured winner Picks">
+    return <section className={styles.featured} aria-label="Featured winner Picks" aria-roledescription="carousel">
+    <div className={styles.carouselHeading}><h2>Trending picks</h2><div className={styles.carouselTools}><span>{markets.length} picks</span><button type="button" aria-label="Previous trending pick" disabled={current===0} onClick={()=>show(current-1)}><ChevronLeftIcon size={18}/></button><button type="button" aria-label="Next trending pick" disabled={current===stops-1} onClick={()=>show(current+1)}><ChevronRightIcon size={18}/></button></div></div>
     <div className={styles.carousel} ref={rail} tabIndex={0} style={{ "--count": markets.length } as CSSProperties}
-      onKeyDown={e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      role="group" aria-label="Trending pick cards"
+      onKeyDown={e => { if (e.target !== e.currentTarget) return; if (e.key === "Home" || e.key === "End") { e.preventDefault(); show(e.key === "Home" ? 0 : stops-1); } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         e.preventDefault();
         show(current + (e.key === "ArrowRight" ? 1 : -1));
       } }}

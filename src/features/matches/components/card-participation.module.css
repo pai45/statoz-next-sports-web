@@ -1,0 +1,17 @@
+.strip { container-type: inline-size; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; min-height: 22px; border-top: 1px solid var(--ds-color-border-subtle); padding-top: 6px; color: var(--ds-color-text-muted); font-size: var(--ds-text-xs); line-height: 1.4; font-variant-numeric: tabular-nums; }
+.signals, .status, .verdict, .coins { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.signals { gap: 8px; overflow: hidden; }
+.status, .verdict { flex-shrink: 0; white-space: nowrap; }
+.trace { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 1; overflow: hidden; }
+.trace i { width: 7px; height: 2px; flex-shrink: 0; background: var(--ds-color-border-strong); }
+.trace [data-verdict="unanswered"], .trace [data-verdict="void"] { opacity: .4; }
+.trace [data-verdict="correct"] { background: var(--ds-color-success); }
+.trace [data-verdict="wrong"] { background: var(--ds-color-danger); }
+.coins { flex-shrink: 1; justify-content: flex-end; gap: 6px; overflow: hidden; white-space: nowrap; }
+.coins > span { flex-shrink: 0; }
+.coins > span + span::before { content: "·"; margin-right: 6px; color: var(--ds-color-text-muted); }
+.coins > svg { flex-shrink: 0; }
+.verdict[data-tone="correct"], .coins [data-tone="correct"] { color: var(--ds-color-success); }
+.verdict[data-tone="wrong"], .coins [data-tone="wrong"] { color: var(--ds-color-danger); }
+@container (width < 24rem) { .coins > span + span { display: none; } }
+@container (width < 18rem) { .trace { display: none; } }

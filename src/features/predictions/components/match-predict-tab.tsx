@@ -229,6 +229,7 @@ export function PredictionQuizScreen({
     <>
       {lockOverlay ? (
         <PredictionLockedOverlay
+          match={match}
           potentialXp={session.potentialXp}
           count={quiz.questions.length}
           automatic={lockOverlay.automatic}

@@ -183,6 +183,7 @@ function groupsForQuery(query: string): MatchSearchGroup[] {
   const groups: MatchSearchGroup[] = [];
 
   for (const league of matchLeagues) {
+    if (league.sport === "tennis") continue;
     const fixtures = sportFixtures
       .filter((fixture) => fixture.leagueId === league.id)
       .sort(compareKickoff);
@@ -203,6 +204,7 @@ function groupsForQuery(query: string): MatchSearchGroup[] {
 
   const teams = new Map<string, { team: SportTeam; sport: Sport }>();
   for (const fixture of sportFixtures) {
+    if (fixture.sport === "tennis") continue;
     teams.set(`${fixture.sport}:${fixture.home.id}`, {
       team: fixture.home,
       sport: fixture.sport,

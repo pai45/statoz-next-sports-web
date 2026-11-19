@@ -1,14 +1,14 @@
 "use client";
 
 import { Button, QuizIcon, SearchIcon } from "@statoz/design-system/web";
-import { sportModuleFor, sportOrder, type Sport } from "@/domain/sports";
+import { sportModuleFor, matchSportOrder, type Sport } from "@/domain/sports";
 import { fixtureCountsBySport } from "@/mocks/matches";
 import styles from "./match-hub-intro.module.css";
 
 /** A sports-focused introduction using the Games dashboard's visual hierarchy. */
 export function MatchHubIntro({ sport, onSearch }: { sport: Sport | null; onSearch: () => void }) {
   const counts = fixtureCountsBySport();
-  const total = sport ? counts[sport].total : sportOrder.reduce((sum, item) => sum + counts[item].total, 0);
+  const total = sport ? counts[sport].total : matchSportOrder.reduce((sum, item) => sum + counts[item].total, 0);
   const label = sport ? sportModuleFor(sport).label : null;
 
   return (
@@ -25,7 +25,7 @@ export function MatchHubIntro({ sport, onSearch }: { sport: Sport | null; onSear
       <div className={styles.summary}>
         <span className={styles.kicker}>THE MATCH CENTRE</span>
         <p><strong>{total}</strong> fixtures to explore</p>
-        <span>{label ?? `${sportOrder.length} sports`}. Picks. Predictions. Quiz.</span>
+        <span>{label ?? `${matchSportOrder.length} sports`}. Picks. Predictions. Quiz.</span>
       </div>
     </section>
   );

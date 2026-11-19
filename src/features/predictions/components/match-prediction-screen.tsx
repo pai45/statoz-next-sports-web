@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { CSSProperties } from "react";
 
 import { ArrowLeftIcon } from "@statoz/design-system/web";
 import type { SportMatch, SportTeam } from "@/domain/matches";
 import type { PredictionQuiz } from "@/domain/predictions";
 import { AuthBoundary } from "@/features/auth";
+import { TeamBadge } from "@/features/matches";
 import { formatKickoffTime } from "@/shared/utils";
 
 import { PredictionQuizScreen } from "./match-predict-tab";
@@ -103,17 +103,8 @@ function FixtureHeader({ match }: { match: SportMatch }) {
 
 function QuizTeamBadge({ team, away = false }: { team: SportTeam; away?: boolean }) {
   return (
-    <span
-      className={`${styles.quizTeamBadge} ${away ? styles.quizTeamBadgeAway : ""}`}
-      style={{
-        "--quiz-team-primary": team.color,
-        "--quiz-team-secondary": team.secondaryColor ?? team.color,
-        "--quiz-team-ink": team.badgeTextColor ?? "var(--ds-color-text-default)",
-      } as CSSProperties}
-      role="img"
-      aria-label={team.name}
-    >
-      <span aria-hidden>{team.shortName}</span>
+    <span className={away ? styles.quizCrestAway : styles.quizCrest}>
+      <TeamBadge team={team} size={40} />
     </span>
   );
 }

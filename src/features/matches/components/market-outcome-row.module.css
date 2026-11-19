@@ -1,0 +1,62 @@
+.row {
+  --outcome-cut: var(--ds-space-8);
+  --outcome-shape: polygon(0 0, calc(100% - var(--outcome-cut)) 0, 100% var(--outcome-cut), 100% calc(100% - var(--outcome-cut)), calc(100% - var(--outcome-cut)) 100%, 0 100%);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  gap: 10px;
+  width: 100%;
+  padding: 0 0 0 11px;
+  border: 0;
+  background: none;
+  color: var(--ds-color-text-default);
+  text-align: left;
+}
+.row::before, .row::after { content: ""; position: absolute; inset: 0; z-index: -1; clip-path: var(--outcome-shape); pointer-events: none; }
+.row::before { background: var(--ds-color-fixture-border); }
+.row::after { inset: 1px; background: var(--ds-color-fixture-strip); }
+button.row { cursor: pointer; }
+button.row:hover::before { background: var(--outcome-fill); }
+button.row:focus-visible { outline: 2px solid var(--ds-color-accent-cyan); outline-offset: 3px; }
+.row > [role="img"] { flex-shrink: 0; }
+.label { display: grid; flex: 1; min-width: 0; gap: 2px; font-size: var(--ds-text-compact); overflow-wrap: anywhere; }
+.percent {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-self: stretch;
+  place-items: center;
+  flex-shrink: 0;
+  min-width: 64px;
+  min-height: 48px;
+  margin: 0;
+  padding: var(--ds-space-6) var(--ds-space-8);
+  background: none;
+  color: var(--outcome-ink);
+  font-family: var(--ds-font-display);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-black);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+.percent::before, .percent::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: var(--outcome-shape);
+  pointer-events: none;
+}
+.percent::before { background: color-mix(in srgb, var(--outcome-fill) 65%, var(--ds-color-text-default)); }
+.percent::after {
+  inset: 1px;
+  background: var(--outcome-fill);
+  box-shadow: inset 0 1px color-mix(in srgb, var(--ds-color-text-default) 20%, transparent), inset 0 -2px color-mix(in srgb, var(--outcome-ink) 12%, transparent);
+}
+button.row:hover .percent::before, button.row:focus-visible .percent::before { background: color-mix(in srgb, var(--outcome-fill) 40%, var(--ds-color-text-default)); }
+button.row:active .percent::after { inset: 2px; }
+.winner { display: flex; align-items: center; gap: 3px; color: var(--ds-color-success); font-size: var(--ds-text-xs); }
+@media (max-width: 359px) { .winner > span { display: none; } .row { gap: 6px; } }

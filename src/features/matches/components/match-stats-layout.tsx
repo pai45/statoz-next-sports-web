@@ -13,13 +13,8 @@ export function MatchStatsLayout({ match, sections, selected, onSelect, children
   const panelId = useId();
   const scroll = useRef<HTMLDivElement>(null);
   const sport = sportModuleFor(match.sport);
-  const label = match.status === "scheduled" ? "PRE-MATCH" : match.status === "live" ? "LIVE MATCH" : "MATCH COMPLETE";
-  return <div className={styles.statsView} data-match-stats={match.sport}
+  return <div className={styles.statsView} data-match-stats={match.sport} data-status={match.status}
     style={{ "--report-accent": accentVar(sport.accent) } as CSSProperties}>
-    <header className={styles.reportHeader}>
-      <div><span className={styles.reportEyebrow}>{match.sport === "basketball" ? "Basketball" : sport.label} / MATCH CENTRE</span><h2>Inside the match<span aria-hidden="true">.</span></h2></div>
-      <span className={styles.reportStatus} data-status={match.status}><i aria-hidden="true" />{label}</span>
-    </header>
     <FilterChips options={sections} selected={selected} onSelect={next => {
       onSelect(next);
       scroll.current?.scrollTo({ top: 0, behavior: "instant" });

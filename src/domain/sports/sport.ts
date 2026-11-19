@@ -64,6 +64,9 @@ export const sportTabColors: SportAccent[] = sportOrder.map(
   (sport) => sportModules[sport].accent,
 );
 
+/** Sports currently available in match discovery and Picks. */
+export const matchSportOrder = sportOrder.filter((sport) => sport !== "tennis");
+
 export function sportModuleFor(sport: Sport): SportModule {
   return sportModules[sport];
 }

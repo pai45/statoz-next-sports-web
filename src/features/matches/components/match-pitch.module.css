@@ -263,3 +263,45 @@ button.benchTile:focus-visible { outline-color: var(--team-color); }
 .panel, .pitch { border: 1px solid var(--ds-color-border-default); }
 .pitch { clip-path: none; }
 @container (width >= 52rem) { .scroll { padding-inline: 0; } }
+
+/* Preserve the app's readable formation markers and complete octagon edges. */
+.pitch { --line: color-mix(in srgb, var(--ds-color-border-strong) 60%, transparent); }
+.row { min-width: 0; }
+.player { flex: 1 1 0; min-width: 0; max-width: 80px; min-height: 64px; align-content: center; }
+.playerNumber { position: relative; isolation: isolate; background: var(--team-color); box-shadow: none; }
+.playerNumber::before { position: absolute; z-index: -1; content: ""; inset: 1.5px; clip-path: var(--ds-clip-octagon); background: var(--ds-color-background-secondary); }
+.playerName { width: 100%; font-size: var(--ds-text-xs); line-height: 1.4; }
+.identity { flex-wrap: wrap; }
+.identityCopy { flex-basis: 140px; }
+.identityCopy small { line-height: 1.5; }
+.benchTile { min-height: 56px; gap: 8px; }
+@container (width < 24rem) {
+  .panel { padding: 10px; }
+  .boardPanel { padding: 6px; }
+  .rows { padding-inline: 4px; }
+  .playerBadge, .playerNumber { width: 32px; height: 32px; }
+  .row { gap: 3px; }
+}
+@container (width >= 40rem) {
+  .scroll { grid-template-columns: minmax(0,1fr); grid-template-areas: "identity" "board" "bench"; padding-inline: 0; }
+  .scroll > :first-child { grid-area: identity; }
+  .boardPanel { grid-area: board; }
+  .scroll > :last-child { grid-area: bench; }
+  .pitch, .pitchCourt { aspect-ratio: 1.65; }
+  .rows { display: grid; grid-template-columns: repeat(var(--formation-lines),minmax(0,1fr)); padding: 16px 12px; gap: 8px; }
+  .row { flex-direction: column; align-items: center; justify-content: space-around; gap: 8px; }
+  .player { flex: none; width: 100%; max-width: 92px; }
+  .markings { background: linear-gradient(var(--line),var(--line)) 50% 0 / 1.2px 100% no-repeat; }
+  .markings::before, .markings::after { top: 50%; left: auto; width: 15%; height: 54%; transform: translateY(-50%); }
+  .markings::before { left: 0; }
+  .markings::after { right: 0; bottom: auto; }
+  .goalAreas::before, .goalAreas::after { top: 50%; left: auto; width: 5.5%; height: 26%; transform: translateY(-50%); }
+  .goalAreas::before { left: 0; }
+  .goalAreas::after { right: 0; bottom: auto; }
+  .pitchCourt .markings::before, .pitchCourt .markings::after { width: 22%; height: 36%; }
+  .centreCircle { width: auto; height: 30%; }
+  .bench { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  button.player, button.benchTile { transition: none; }
+}

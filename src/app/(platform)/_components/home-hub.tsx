@@ -61,7 +61,7 @@ export function HomeHub({ matchFeed, gamesFeed, sportDecks, mode }: HomeHubProps
   const initialTab = mode === "games" ? 1 : mode === "matches" ? 0 : 0;
   const tab = initialTab;
   const [matchSport, setMatchSport] = useState<SportHubSelection>(
-    initialTab === 0 ? initialSport : null,
+    initialTab === 0 && initialSport !== "tennis" ? initialSport : null,
   );
   const [gamesSport, setGamesSport] = useState<SportHubSelection>(
     initialTab === 1 ? initialSport : null,
@@ -155,6 +155,7 @@ export function HomeHub({ matchFeed, gamesFeed, sportDecks, mode }: HomeHubProps
         <div role="tabpanel" aria-label="Games" className="flex min-h-0 flex-1 flex-col">
           <SportHubTabs
             selected={gamesSport}
+            sports={sportOrder}
             onSelect={(selection) => selectSport("games", selection)}
             onMore={() => setSelectorMode("games")}
           />

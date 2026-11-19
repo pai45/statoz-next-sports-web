@@ -20,10 +20,13 @@ export function selectEditorialCycles(fixtures:SportMatch[],markets:PickMarket[]
 }
 export function selectFeaturedPicks(markets:PickMarket[]) {
   const seen=new Set<string>();
-  return matchDiscovery.carouselSlots.flatMap(slot=>{
-    const market=markets.find(m=>m.id===slot.preferred&&m.sport===slot.sport&&!seen.has(m.id)&&m.outcomes.length>0) ?? markets.find(m=>m.sport===slot.sport&&m.type==='match'&&!seen.has(m.id)&&m.outcomes.length>0);
+  const available=markets.filter(m=>m.sport!=="tennis"&&m.outcomes.length>0);
+  const featured=matchDiscovery.carouselSlots.flatMap(slot=>{
+    const market=available.find(m=>m.id===slot.preferred&&m.sport===slot.sport&&!seen.has(m.id)) ?? available.find(m=>m.sport===slot.sport&&m.type==='match'&&!seen.has(m.id));
     if(!market)return [];seen.add(market.id);return [market];
   });
+  const remaining=available.filter(m=>!seen.has(m.id)&&m.type==='match').sort((a,b)=>Number(b.status==='live'||b.status==='upcoming')-Number(a.status==='live'||a.status==='upcoming')||b.volumeOz-a.volumeOz||a.id.localeCompare(b.id));
+  return [...featured,...remaining].slice(0,7);
 }
 
 /** One real available Future per sport; championship markets lead, then stable IDs. */

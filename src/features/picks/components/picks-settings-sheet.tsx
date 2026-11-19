@@ -53,7 +53,10 @@ export function PicksSettingsSheet({
           options={[
             ["all", "ALL"],
             ["open", "OPEN"],
+            ["live", "LIVE"],
             ["closed", "CLOSED"],
+            ["settled", "SETTLED"],
+            ["voided", "VOIDED"],
           ]}
           onChange={(value) => setStatusFilter(value as PickStatusFilter)}
         />

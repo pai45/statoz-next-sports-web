@@ -8,6 +8,7 @@ import { editorialMatchAccent } from "../editorial-accent";
 import type { SportMatch } from "@/domain/matches";
 import { italianGpReport } from "@/mocks/matches/details";
 import { TeamBadge } from "./team-badge";
+import { MatchParticipation } from "./card-participation";
 import styles from "./editorial-discovery.module.css";
 import { kickoffClock } from "../editorial-format";
 import { DiscoveryChrome as EditorialChrome, DiscoveryTeamName } from '@statoz/design-system/web/components/data-display/discovery-card';
@@ -37,5 +38,6 @@ export function EditorialMatchCard({ match, compact = false, followed = false, s
     <EditorialChrome /><EditorialStatus label={showCompetition ? match.leagueLabel : ""} showMarker={showCompetition} status={match.status} liveContext={match.status === "live" ? timing : undefined} sport={match.sport}/>
     {racing ? <><h3 className={styles.title}>{match.home.name}</h3>{upcoming&&<time dateTime={match.kickoff} className={styles.kickoff} data-match-kickoff>{clock || "—"}</time>}{rows.map(row => <div className={styles.teamRow} key={row.driverId}><span className={styles.answer}>{row.position}</span><DiscoveryTeamName className={styles.name}>{row.name}</DiscoveryTeamName><span className={styles.answer}>{row.gap ?? row.status}</span></div>)}</> : stacked ? <div className={styles.scoreRows}>{[match.home, match.away].map((team, i) => <div className={styles.teamRow} key={team.id}><TeamBadge team={team} size={compact ? 28 : 36}/><DiscoveryTeamName className={styles.name}>{team.name}</DiscoveryTeamName><span className={match.sport === "cricket" && !/[0-9—]/.test(score(i === 0 ? match.homeScore : match.awayScore)) ? styles.answer : styles.score}>{match.sport === "cricket" ? score(i === 0 ? match.homeScore : match.awayScore).split("(")[0].trim() : score(i === 0 ? match.homeScore : match.awayScore)}</span>{match.sport === "cricket" && String(i === 0 ? match.homeScore ?? "" : match.awayScore ?? "").includes("(") && <span className={styles.inningsContext}>{String(i === 0 ? match.homeScore : match.awayScore).slice(String(i === 0 ? match.homeScore : match.awayScore).indexOf("("))}</span>}</div>)}</div> : <div className={styles.mirrored}><div className={styles.identity} data-side="home"><TeamBadge team={match.home} size={32}/><DiscoveryTeamName className={styles.name}>{match.home.name}</DiscoveryTeamName></div>{upcoming ? <time dateTime={match.kickoff} className={styles.kickoff} data-match-kickoff>{clock || "—"}</time> : <span className={styles.score}>{`${score(match.homeScore)} : ${score(match.awayScore)}`}</span>}<div className={styles.identity} data-side="away"><TeamBadge team={match.away} size={32}/><DiscoveryTeamName className={styles.name}>{match.away.name}</DiscoveryTeamName></div></div>}
     {match.resultLine && match.sport !== "football" && <p className={styles.answer}>{match.resultLine}</p>}
+    <MatchParticipation match={match} />
   </Link>;
 }

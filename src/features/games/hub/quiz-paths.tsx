@@ -8,9 +8,11 @@ import type { Sport } from "@/domain/sports";
 import { modeAccent, modeBlurb, modeGlyph, modeLabels } from "@/mocks/games/quiz";
 
 import { questionsPerSet, quizModes, setCount } from "../quiz/constants";
-import { completedCount, maxStars, modeProgressOf, nextChallenge, setProgressOf, starCount, starsFor } from "../quiz/state/ladder";
+import { completedCount, maxStars, modeProgressOf, setProgressOf, starCount, starsFor } from "../quiz/state/ladder";
 import { progressForSport, useQuizRecord } from "../quiz/state/quiz-progress";
-import type { QuizMode, QuizProgress } from "../quiz/types";
+import { continueTarget } from "../quiz";
+export { continueTarget } from "../quiz";
+import type { QuizMode } from "../quiz/types";
 import styles from "./hub.module.css";
 import { PlayMark } from "./quiz-cover";
 
@@ -25,25 +27,6 @@ export function quizHref(sport: Sport, mode?: QuizMode, set?: number): string {
   if (set) params.set("set", String(set));
   const query = params.toString();
   return `/play/quiz/${sport}${query ? `?${query}` : ""}`;
-}
-
-/**
- * The path to pick up: the one with the most progress that is not finished.
- * A fresh player starts at easy, set one.
- */
-export function continueTarget(progress: QuizProgress): { mode: QuizMode; set: number; started: boolean } {
-  let best: { mode: QuizMode; cleared: number } | null = null;
-  for (const mode of quizModes) {
-    const cleared = completedCount(modeProgressOf(progress, mode));
-    if (cleared === 0 || cleared >= setCount) continue;
-    if (!best || cleared > best.cleared) best = { mode, cleared };
-  }
-  if (!best) {
-    const anyStarted = quizModes.some((mode) => completedCount(modeProgressOf(progress, mode)) > 0);
-    const mode = anyStarted ? quizModes.find((m) => completedCount(modeProgressOf(progress, m)) < setCount) ?? "easy" : "easy";
-    return { mode, set: nextChallenge(modeProgressOf(progress, mode), setCount), started: anyStarted };
-  }
-  return { mode: best.mode, set: nextChallenge(modeProgressOf(progress, best.mode), setCount), started: true };
 }
 
 /** CONTINUE, as a save slot: the path, the set, the climb so far. */

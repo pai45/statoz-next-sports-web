@@ -52,7 +52,7 @@ export function PickMarketCard({
   onPick?: (market: PickMarket, outcomeId: string) => void;
   onClaim?: (position: PickPosition) => void;
 }) {
-  if (market.sport !== "tennis") return market.type === "event" ? <EditorialEventsPanel markets={[market]} /> : <EditorialMarketCard market={market} positions={positions} onPick={onPick} onClaim={onClaim} />;
+  if (market.sport !== "tennis") return market.type === "event" ? <EditorialEventsPanel markets={[market]} positionsFor={() => positions} onPick={onPick} onClaim={onClaim} /> : <EditorialMarketCard market={market} positions={positions} onPick={onPick} onClaim={onClaim} />;
   // A future scrolls every candidate; every other market shows three and
   // counts the rest on its strip, as the app does.
   const isFuture = market.type === "future";

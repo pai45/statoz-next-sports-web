@@ -21,9 +21,9 @@ export function TrendingFeed() {
     const featured = selectFeaturedPicks(pickMarkets);
     return <div className={`${styles.feed} ${tokens.editorialTokens}`} data-testid="match-trending-feed"><FeaturedPicks markets={featured} onPick={trading.openTrade}/><PersonalPredictions showPlayed={false}/>{cycles.map(cycle => <section className={styles.cycle} key={cycle.sport} aria-label={cycle.sport + ' discovery'} data-sport={cycle.sport}>
     {cycle.matches.length > 0 && <div className={styles.matches}>{cycle.matches.map(id => { const match = matchById(id); return match ? <EditorialMatchCard key={id} match={match}/> : null; })}</div>}
-    <EditorialEventsPanel markets={cycle.events.flatMap(id => { const m = pickMarketById(id); return m ? [m] : []; })}/>
+    <EditorialEventsPanel markets={cycle.events.flatMap(id => { const m = pickMarketById(id); return m ? [m] : []; })} onPick={trading.openTrade} onClaim={trading.claim}/>
     <div className={styles.grid} data-single={singleColumn || undefined}><SportQuiz sport={cycle.sport}/>{cycle.compact && matchById(cycle.compact) && <EditorialMatchCard match={matchById(cycle.compact)!} compact/>}{cycle.missions.flatMap(id => { const match = matchById(id); if (!match)
             return []; const quiz = quizzesForMatch(match).find(q => (q.entryFee ?? 0) === 0); return quiz && !predictionFor(predictions, id, quiz.id) ? [<EditorialMission key={id + '::' + quiz.id} match={match} quiz={quiz} prediction={predictionFor(predictions, id, quiz.id)}/>] : []; })}</div>
-    {cycle.future && pickMarketById(cycle.future) && <EditorialMarketCard market={pickMarketById(cycle.future)!} featured onPick={trading.openTrade}/>}
+    {cycle.future && pickMarketById(cycle.future) && <EditorialMarketCard market={pickMarketById(cycle.future)!} featured onPick={trading.openTrade} onClaim={trading.claim}/>}
   </section>)}{trading.overlays}</div>;
 }

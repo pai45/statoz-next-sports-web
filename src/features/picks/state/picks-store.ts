@@ -10,7 +10,7 @@ import { recordStreakActivity } from "@/features/streaks/activity";
 import { pickMarketById, pickMarkets, picksDemoAnchor } from "@/mocks/picks";
 
 export type PickSort = "new" | "start" | "closing" | "volume" | "trending";
-export type PickStatusFilter = "all" | "open" | "closed";
+export type PickStatusFilter = "all" | "open" | "live" | "closed" | "settled" | "voided";
 export type PicksSnapshot = {
   version: 1; hydrated: boolean; positions: PickPosition[];
   typeFilter: PickMarketType | "all"; sportFilter: Sport | "all";
@@ -94,11 +94,13 @@ export function resetFilters(): void { setFilters({ typeFilter: "all", sportFilt
 function openStatus(status: PickMarketStatus | undefined): boolean { return status === "upcoming" || status === "live"; }
 export function selectFilteredMarkets(snapshot: PicksSnapshot): PickMarket[] {
   const filtered = pickMarkets.filter((market) => {
+    if (market.sport === "tennis") return false;
     if (snapshot.typeFilter !== "all" && market.type !== snapshot.typeFilter) return false;
     if (snapshot.sportFilter !== "all" && market.sport !== snapshot.sportFilter) return false;
     if (snapshot.leagueFilter !== "all" && market.leagueId !== snapshot.leagueFilter) return false;
     if (snapshot.statusFilter === "open" && !openStatus(market.status)) return false;
     if (snapshot.statusFilter === "closed" && openStatus(market.status)) return false;
+    if (["live", "settled", "voided"].includes(snapshot.statusFilter) && market.status !== snapshot.statusFilter) return false;
     return true;
   });
   const start = (market: PickMarket) => Date.parse(market.closesAt ?? "9999-12-31");
